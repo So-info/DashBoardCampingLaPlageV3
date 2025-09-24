@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#6366f1" />
+  <title>Camping – Dashboard</title>
+  <!-- Tailwind (Play CDN) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: {
+              50: '#eef2ff', 100: '#e0e7ff', 200: '#c7d2fe', 300: '#a5b4fc',
+              400: '#818cf8', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca', 800: '#3730a3', 900: '#312e81'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @media (max-width: 767px) {
+      #boardWrapper { display:flex; gap:.75rem; overflow-x:auto; -webkit-overflow-scrolling:touch; scroll-snap-type:x mandatory; padding-bottom:1rem; }
+      #boardWrapper > .col { min-width:88%; scroll-snap-align:start; }
+    }
+    button, select, input, textarea { touch-action: manipulation; }
+    .fab { position:fixed; right:1rem; bottom:1rem; z-index:30; border-radius:9999px; box-shadow:0 10px 25px rgba(0,0,0,.15); }
+  </style>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🏕️</text></svg>">
+</head>
+<body class="bg-gray-50 text-gray-800">
+  <!-- App container -->
+  <div id="app" class="min-h-screen">
+    <!-- Header -->
+    <header class="sticky top-0 z-10 bg-white border-b border-gray-200">
+      <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <span class="text-2xl">🏕️</span>
+          <h1 class="text-xl font-semibold">Dashboard Camping</h1>
+          <span id="envBadge" class="hidden ml-3 text-xs px-2 py-1 rounded-full bg-primary-100 text-primary-700">Démo</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <span id="userRole" class="text-sm text-gray-600"></span>
+          <button id="logoutBtn" class="hidden text-sm px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200">Se déconnecter</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Auth view -->
+    <main id="authView" class="max-w-md mx-auto mt-16 px-4">
+      <div class="bg-white rounded-2xl shadow p-6">
+        <h2 class="text-lg font-semibold mb-6">Connexion</h2>
+        <form id="loginForm" class="space-y-3">
+          <div>
+            <label class="block text-sm mb-1">Email</label>
+            <input id="email" type="email" required class="w-full px-3 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-primary-400">
+          </div>
+          <div>
+            <label class="block text-sm mb-1">Mot de passe</label>
+            <input id="password" type="password" required class="w-full px-3 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-primary-400">
+          </div>
+          <button class="w-full bg-primary-600 text-white py-2 rounded-lg hover:bg-primary-700">Se connecter</button>
+        </form>
+
+        <div class="my-4 flex items-center gap-3">
+          <div class="flex-1 h-px bg-gray-200"></div>
+          <span class="text-xs text-gray-500">ou</span>
+          <div class="flex-1 h-px bg-gray-200"></div>
+        </div>
+
+        <button id="googleBtn" class="w-full flex items-center justify-center gap-2 border rounded-xl py-2 hover:bg-gray-50">
+          <img alt="Google" src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5"/>
+          <span>Continuer avec Google</span>
+        </button>
+
+        <p class="text-xs text-gray-500 mt-4">Pas de compte ? Utilisez Google ou demandez à votre Responsable.</p>
+      </div>
+    </main>
+
+    <!-- App view -->
+    <main id="appView" class="hidden max-w-6xl mx-auto px-4 py-6">
+      <!-- Controls -->
+      <details class="mb-3 md:mb-4 bg-white rounded-2xl shadow open:shadow p-3 md:p-4" open>
+        <summary class="md:hidden text-sm font-medium cursor-pointer select-none">Filtres & recherche</summary>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mt-2 md:mt-0">
+          <select id="teamFilter" class="px-3 py-3 rounded-xl border bg-white">
+            <option value="ALL">Toutes les équipes</option>
+            <option value="Reception">Réception</option>
+            <option value="Technique">Technique</option>
+            <option value="Menage">Ménage</option>
+          </select>
+          <select id="statusFilter" class="px-3 py-3 rounded-xl border bg-white">
+            <option value="ACTIVE">Statuts actifs</option>
+            <option value="A_faire">À faire</option>
+            <option value="En_cours">En cours</option>
+            <option value="Bloque">Bloqué</option>
+            <option value="Termine">Terminé</option>
+          </select>
+          <input id="searchInput" placeholder="Rechercher une tâche…" class="px-3 py-3 rounded-xl border" />
+          <button id="newTaskBtn" class="hidden md:block md:justify-self-end px-4 py-3 rounded-xl bg-primary-600 text-white hover:bg-primary-700">+ Nouvelle tâche</button>
+        </div>
+      </details>
+
+      <!-- Board -->
+      <div id="boardWrapper" class="md:grid md:grid-cols-4 md:gap-4">
+        <div id="board" class="contents md:contents">
+          <!-- Colonnes insérées par JS -->
+        </div>
+      </div>
+
+      <!-- Drawer: create/edit task -->
+      <div id="drawer" class="hidden fixed inset-0 z-20">
+        <div class="absolute inset-0 bg-black/30" id="drawerBackdrop"></div>
+        <div class="absolute right-0 top-0 h-full w-full sm:w-[480px] bg-white shadow-2xl p-6 overflow-y-auto">
+          <div class="flex items-center justify-between mb-4">
+            <h3 id="drawerTitle" class="text-lg font-semibold">Nouvelle tâche</h3>
+            <button id="drawerClose" class="text-gray-500 hover:text-gray-700">✕</button>
+          </div>
+          <form id="taskForm" class="space-y-4">
+            <input type="hidden" id="taskId" />
+            <div>
+              <label class="block text-sm mb-1">Titre</label>
+              <input id="title" required class="w-full px-3 py-2 rounded-lg border" />
+            </div>
+            <div>
+              <label class="block text-sm mb-1">Description</label>
+              <textarea id="description" rows="4" class="w-full px-3 py-2 rounded-lg border"></textarea>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-sm mb-1">Équipe</label>
+                <select id="team" class="w-full px-3 py-2 rounded-lg border">
+                  <option>Reception</option>
+                  <option>Technique</option>
+                  <option>Menage</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm mb-1">Priorité</label>
+                <select id="priority" class="w-full px-3 py-2 rounded-lg border">
+                  <option>Normale</option>
+                  <option>Haute</option>
+                  <option>Urgent</option>
+                </select>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-sm mb-1">Échéance</label>
+                <input id="dueDate" type="date" class="w-full px-3 py-2 rounded-lg border" />
+              </div>
+              <div>
+                <label class="block text-sm mb-1">Statut</label>
+                <select id="status" class="w-full px-3 py-2 rounded-lg border">
+                  <option>A_faire</option>
+                  <option>En_cours</option>
+                  <option>Bloque</option>
+                  <option>Termine</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm mb-1">Attribuer à (optionnel)</label>
+              <input id="assignee" placeholder="Nom du salarié" class="w-full px-3 py-2 rounded-lg border" />
+            </div>
+            <div class="flex items-center gap-2">
+              <button class="px-4 py-2 rounded-lg bg-primary-600 text-white hover:bg-primary-700">Enregistrer</button>
+              <button type="button" id="deleteBtn" class="hidden px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700">Supprimer</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- FAB mobile -->
+      <button id="fabNewTask" class="hidden fab bg-primary-600 text-white px-5 py-4 text-base">+ Tâche</button>
+    </main>
+  </div>
+
+  <!-- Firebase SDKs -->
+  <script type="module">
+    // ----------------------
+    // 1) CONFIGURATION
+    // ----------------------
+    // TODO: remplacez par vos informations de projet Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyB0mHA_vMsBiCdzWDACfN4Lhef644NOHDY",
+      authDomain: "dashboardcampinglaplagev3.firebaseapp.com",
+      projectId: "dashboardcampinglaplagev3",
+      storageBucket: "dashboardcampinglaplagev3.firebasestorage.app",
+      messagingSenderId: "1083060495264",
+      appId: "1:1083060495264:web:03e34965179a671ca6fac5"
+    };
+
+    // Démo: si non modifié, badge "Démo" visible
+    if (firebaseConfig.apiKey === 'CHANGE_ME') {
+      document.getElementById('envBadge').classList.remove('hidden');
+    }
+
+    // ----------------------
+    // 2) IMPORTS FIREBASE
+    // ----------------------
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+    import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup, isSignInWithEmailLink, signInWithEmailLink, sendSignInLinkToEmail } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+    import { getFirestore, collection, addDoc, doc, getDoc, setDoc, updateDoc, deleteDoc, serverTimestamp, onSnapshot, query, orderBy, where } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // Pour invitations email-link (facultatif, prêt si tu veux l'activer plus tard)
+    const actionCodeSettings = { url: window.location.origin + window.location.pathname, handleCodeInApp: true };
+
+    // ----------------------
+    // 3) UI HELPERS
+    // ----------------------
+    const $ = (id) => document.getElementById(id);
+    const authView = $('authView');
+    const appView = $('appView');
+    const userRoleEl = $('userRole');
+    const logoutBtn = $('logoutBtn');
+    const newTaskBtn = $('newTaskBtn');
+    const fabNewTask = $('fabNewTask');
+
+    const board = $('board');
+    const teamFilter = $('teamFilter');
+    const statusFilter = $('statusFilter');
+    const searchInput = $('searchInput');
+
+    const drawer = $('drawer');
+    const drawerBackdrop = $('drawerBackdrop');
+    const drawerClose = $('drawerClose');
+    const drawerTitle = $('drawerTitle');
+    const taskForm = $('taskForm');
+    const deleteBtn = $('deleteBtn');
+
+    const googleBtn = $('googleBtn');
+
+    const statusColumns = [
+      { key: 'A_faire', title: 'À faire' },
+      { key: 'En_cours', title: 'En cours' },
+      { key: 'Bloque', title: 'Bloqué' },
+      { key: 'Termine', title: 'Terminé' },
+    ];
+
+    function renderBoard(tasks) {
+      board.innerHTML = '';
+      for (const col of statusColumns) {
+        const colEl = document.createElement('div');
+        colEl.className = 'col bg-white rounded-2xl shadow p-3 min-h-[200px]';
+        const header = document.createElement('div');
+        header.className = 'flex items-center justify-between mb-2';
+        header.innerHTML = `<h3 class="font-semibold">${col.title}</h3>`;
+        colEl.appendChild(header);
+
+        const list = document.createElement('div');
+        list.className = 'space-y-2';
+        const filtered = tasks.filter(t => t.status === col.key);
+        if (filtered.length === 0) {
+          list.innerHTML = '<div class="text-sm text-gray-400">Aucune tâche</div>';
+        } else {
+          for (const t of filtered) {
+            const card = document.createElement('div');
+            card.className = 'rounded-2xl border p-4 active:scale-[.99] transition-transform cursor-pointer';
+            card.innerHTML = `
+              <div class="flex items-start justify-between">
+                <div>
+                  <div class="font-medium">${escapeHtml(t.title)}</div>
+                  <div class="text-xs text-gray-500">${t.team}${t.assignee ? ' · ' + escapeHtml(t.assignee) : ''}</div>
+                </div>
+                <span class="text-[10px] px-2 py-1 rounded-full ${priorityPill(t.priority)}">${t.priority || 'Normale'}</span>
+              </div>
+              ${t.dueDate ? `<div class="text-xs mt-1">Échéance : ${formatDate(t.dueDate)}</div>` : ''}
+            `;
+            card.addEventListener('click', () => openDrawer(t));
+            list.appendChild(card);
+          }
+        }
+        colEl.appendChild(list);
+        board.appendChild(colEl);
+      }
+    }
+
+    function priorityPill(priority) {
+      switch (priority) {
+        case 'Urgent': return 'bg-red-100 text-red-700';
+        case 'Haute': return 'bg-amber-100 text-amber-700';
+        default: return 'bg-gray-100 text-gray-700';
+      }
+    }
+
+    function escapeHtml(s = '') {
+      return s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    }
+
+    function formatDate(iso) {
+      try { return new Date(iso).toLocaleDateString('fr-FR'); } catch { return iso; }
+    }
+
+    function openDrawer(task = null) {
+      drawer.classList.remove('hidden');
+      if (task) {
+        drawerTitle.textContent = 'Modifier la tâche';
+        $('taskId').value = task.id;
+        $('title').value = task.title || '';
+        $('description').value = task.description || '';
+        $('team').value = task.team || 'Reception';
+        $('priority').value = task.priority || 'Normale';
+        $('dueDate').value = task.dueDate || '';
+        $('status').value = task.status || 'A_faire';
+        $('assignee').value = task.assignee || '';
+        deleteBtn.classList.remove('hidden');
+        deleteBtn.onclick = async () => {
+          if (!confirm('Supprimer cette tâche ?')) return;
+          await deleteDoc(doc(db, 'tasks', task.id));
+          closeDrawer();
+        };
+      } else {
+        drawerTitle.textContent = 'Nouvelle tâche';
+        taskForm.reset();
+        $('taskId').value = '';
+        $('status').value = 'A_faire';
+        deleteBtn.classList.add('hidden');
+      }
+    }
+
+    function closeDrawer() {
+      drawer.classList.add('hidden');
+    }
+
+    drawerBackdrop.addEventListener('click', closeDrawer);
+    drawerClose.addEventListener('click', closeDrawer);
+
+    // ----------------------
+    // 4) AUTH
+    // ----------------------
+    async function ensureUserDoc(user) {
+      try {
+        const uref = doc(db, 'users', user.uid);
+        const snap = await getDoc(uref);
+        if (!snap.exists()) {
+          await setDoc(uref, { role: 'Employe', email: user.email || null, createdAt: serverTimestamp() });
+        }
+      } catch (e) { console.warn('ensureUserDoc', e); }
+    }
+
+    const loginForm = $('loginForm');
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = $('email').value.trim();
+      const password = $('password').value.trim();
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+      } catch (err) {
+        alert('Connexion impossible: ' + (err?.message || err));
+      }
+    });
+
+    const provider = new GoogleAuthProvider();
+    googleBtn.addEventListener('click', async () => {
+      try {
+        await signInWithPopup(auth, provider);
+      } catch (e) {
+        alert('Connexion Google impossible: ' + (e?.message || e));
+      }
+    });
+
+    logoutBtn.addEventListener('click', () => signOut(auth));
+
+    // Récupère le rôle depuis la collection users/{uid}
+    async function getUserRole(uid) {
+      try {
+        const snap = await getDoc(doc(db, 'users', uid));
+        return snap.exists() ? (snap.data().role || 'Employe') : 'Employe';
+      } catch { return 'Employe'; }
+    }
+
+    // ----------------------
+    // 5) DATA + LISTENERS
+    // ----------------------
+    let unsubTasks = null;
+    let currentRole = 'Employe';
+
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        await ensureUserDoc(user); // crée users/{uid} si absent (role par défaut: Employe)
+        currentRole = await getUserRole(user.uid);
+        userRoleEl.textContent = `${user.email} · Rôle : ${currentRole}`;
+        authView.classList.add('hidden');
+        appView.classList.remove('hidden');
+        logoutBtn.classList.remove('hidden');
+        const canCreate = ['Responsable','Reception'].includes(currentRole);
+        newTaskBtn.classList.toggle('hidden', !canCreate);
+        fabNewTask.classList.toggle('hidden', !canCreate);
+        attachTaskListener();
+      } else {
+        if (unsubTasks) unsubTasks();
+        authView.classList.remove('hidden');
+        appView.classList.add('hidden');
+        userRoleEl.textContent = '';
+        logoutBtn.classList.add('hidden');
+      }
+    });
+
+    function attachTaskListener() {
+      if (unsubTasks) unsubTasks();
+      const tasksRef = collection(db, 'tasks');
+      unsubTasks = onSnapshot(query(tasksRef, orderBy('createdAt','desc')), (snap) => {
+        const q = (searchInput.value || '').toLowerCase();
+        const tf = teamFilter.value;
+        const sf = statusFilter.value;
+        const items = [];
+        snap.forEach(d => {
+          const t = { id: d.id, ...d.data() };
+          if (tf !== 'ALL' && t.team !== tf) return;
+          if (sf === 'ACTIVE' && ['Termine'].includes(t.status)) return;
+          if (['A_faire','En_cours','Bloque','Termine'].includes(sf) && t.status !== sf) return;
+          const blob = `${t.title} ${t.description} ${t.assignee}`.toLowerCase();
+          if (q && !blob.includes(q)) return;
+          items.push(t);
+        });
+        renderBoard(items);
+      });
+    }
+
+    teamFilter.addEventListener('change', attachTaskListener);
+    statusFilter.addEventListener('change', attachTaskListener);
+    searchInput.addEventListener('input', attachTaskListener);
+
+    // CREATE / UPDATE TASK
+    newTaskBtn.addEventListener('click', () => openDrawer());
+    fabNewTask.addEventListener('click', () => openDrawer());
+
+    taskForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const payload = {
+        title: $('title').value.trim(),
+        description: $('description').value.trim(),
+        team: $('team').value,
+        priority: $('priority').value,
+        dueDate: $('dueDate').value || null,
+        status: $('status').value,
+        assignee: $('assignee').value.trim() || null,
+        updatedAt: serverTimestamp(),
+      };
+      try {
+        const id = $('taskId').value;
+        if (id) {
+          await updateDoc(doc(db, 'tasks', id), payload);
+        } else {
+          await addDoc(collection(db, 'tasks'), { ...payload, createdAt: serverTimestamp(), createdBy: auth.currentUser.uid });
+        }
+        closeDrawer();
+      } catch (err) {
+        alert('Erreur enregistrement: ' + (err?.message || err));
+      }
+    });
+  </script>
+
+  <!-- INFO: Firestore security rules à copier dans la console Firebase
+
+  rules_version = '2';
+  service cloud.firestore {
+    match /databases/{database}/documents {
+      function isSignedIn() { return request.auth != null; }
+      function userRole() { return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role; }
+      function isResponsable() { return userRole() == 'Responsable'; }
+      function isReception() { return userRole() == 'Reception'; }
+      function isTeamMember(team) { return userRole() == team || isResponsable() || isReception(); }
+
+      match /users/{uid} {
+        allow read: if isSignedIn();
+        allow write: if isResponsable() || uid == request.auth.uid; // Responsable gère les rôles, chacun peut MAJ son profil minimal
+      }
+
+      match /tasks/{taskId} {
+        allow read: if isSignedIn();
+        // Création: Responsable et Réception
+        allow create: if isResponsable() || isReception();
+        // Mise à jour: Responsable, Réception, ou membre de l'équipe de la tâche
+        allow update: if isResponsable() || isReception() || (isTeamMember(request.resource.data.team));
+        // Suppression: Responsable uniquement
+        allow delete: if isResponsable();
+      }
+    }
+  }
+
+  NOTE: Créez un document users/{uid} avec { role: 'Responsable' | 'Reception' | 'Technique' | 'Menage' }
+  -->
+</body>
+</html>
