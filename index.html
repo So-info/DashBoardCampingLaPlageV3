@@ -125,7 +125,12 @@
   <main id="authView" class="min-h-[calc(100vh-64px)] grid place-items-center px-4">
     <section class="panel p-6 sm:p-8 w-full max-w-md">
       <header class="flex items-center gap-3 mb-3">
-        <img class="h-12 sm:h-16 object-contain" src="assets/logo-la-plage.png" alt="Camping La Plage" />
+       <img
+  class="h-12 sm:h-16 object-contain"
+  src="./assets/logo-la-plage.png"
+  alt="Camping La Plage"
+  onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'🏕️',className:'text-5xl select-none'}))" />
+
         <div>
           <h2 class="text-2xl font-semibold tracking-tight">Connexion</h2>
           <p class="text-[var(--text-dim)] text-sm">Entrez vos identifiants pour accéder au dashboard.</p>
@@ -524,4 +529,5 @@
   </script>
 </body>
 </html>
+
 
