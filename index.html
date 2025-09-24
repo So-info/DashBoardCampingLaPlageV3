@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#6366f1" />
   <title>Camping – Dashboard</title>
+
   <!-- Tailwind (Play CDN) -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -18,93 +19,91 @@
               800: '#3730a3', 900: '#312e81'
             }
           },
-          borderRadius: {
-            'xl': '1rem'
-          }
+          borderRadius: { xl: '1rem', '2xl': '1.25rem' },
+          boxShadow: { 'soft': '0 10px 30px rgba(0,0,0,.06)' },
+          keyframes: {
+            pop: { from: { opacity: 0, transform: 'translateY(4px)' }, to: { opacity: 1, transform: 'none' } }
+          },
+          animation: { pop: 'pop .15s ease-out' }
         }
       }
     }
   </script>
+
   <style>
+    /* Mobile board: scrollable columns */
     @media (max-width: 767px) {
       #boardWrapper {
-        display: flex;
-        gap: 1rem;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        scroll-snap-type: x mandatory;
-        padding-bottom: 1rem;
+        display: flex; gap: 1rem; overflow-x: auto; -webkit-overflow-scrolling: touch;
+        scroll-snap-type: x mandatory; padding-bottom: 1rem;
       }
-      #boardWrapper > .col {
-        min-width: 90%;
-        scroll-snap-align: start;
-      }
+      #boardWrapper > .col { min-width: 90%; scroll-snap-align: start; }
     }
     button, select, input, textarea { touch-action: manipulation; }
     .fab {
-      position: fixed;
-      right: 1rem;
-      bottom: 1rem;
-      z-index: 30;
-      border-radius: 9999px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, .15);
-      transition: background-color 0.3s ease;
+      position: fixed; right: 1rem; bottom: 1rem; z-index: 30; border-radius: 9999px;
+      box-shadow: 0 10px 25px rgba(0,0,0,.15); transition: background-color .3s ease;
     }
   </style>
+
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🏕️</text></svg>">
 </head>
-<body class="text-gray-800 antialiased selection:bg-primary-200 selection:text-primary-900 bg-gray-50">
+
+<!-- PATCH: fond plus doux -->
+<body class="antialiased bg-gradient-to-b from-gray-50 to-white text-gray-800 selection:bg-primary-200">
+
   <!-- App container -->
   <div id="app" class="min-h-screen flex flex-col">
-    <!-- Header -->
-    <header class="sticky top-0 z-20 bg-white border-b border-gray-200 shadow-sm">
-      <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-        <div class="flex items-center gap-4">
-          <span class="text-3xl select-none">🏕️</span>
-          <h1 class="text-2xl font-semibold tracking-tight text-primary-700">Dashboard Camping</h1>
-          <span id="envBadge" class="hidden ml-4 text-xs px-3 py-1 rounded-full bg-primary-100 text-primary-700 select-none">Démo</span>
+
+    <!-- PATCH: Header compact + blur -->
+    <header class="sticky top-0 z-20 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60 border-b">
+      <div class="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <span class="text-2xl select-none">🏕️</span>
+          <h1 class="text-xl font-semibold tracking-tight text-primary-700">Dashboard Camping</h1>
+          <span id="envBadge" class="hidden ml-3 text-xs px-2 py-1 rounded-full bg-primary-100 text-primary-700 select-none">Démo</span>
         </div>
-        <div class="flex items-center gap-6">
-          <span id="userRole" class="text-sm text-gray-600 font-medium truncate max-w-xs"></span>
-          <button id="logoutBtn" class="hidden text-sm px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition">Se déconnecter</button>
+        <div class="flex items-center gap-3">
+          <span id="userRole" class="hidden sm:inline text-xs px-2 py-1 rounded-full bg-primary-50 text-primary-700"></span>
+          <button id="logoutBtn" class="hidden text-sm px-3 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition">Se déconnecter</button>
         </div>
       </div>
     </header>
 
-    <!-- Onglets (cachés tant que non connecté) -->
-    <nav id="tabs" class="hidden max-w-6xl mx-auto px-6 mt-4 sticky top-16 z-20 bg-white/90 backdrop-blur-sm rounded-full shadow-sm">
-      <ul class="flex gap-3 text-sm font-medium select-none">
-        <li><button data-tab="tasks" class="tab-btn px-5 py-2 rounded-full bg-primary-600 text-white shadow-sm transition hover:bg-primary-700">Tâches</button></li>
-        <li><button data-tab="accounts" class="tab-btn px-5 py-2 rounded-full bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 transition">Comptes</button></li>
-      </ul>
+    <!-- PATCH: Onglets pill -->
+    <nav id="tabs" class="hidden max-w-6xl mx-auto px-6 mt-4">
+      <div class="inline-flex rounded-full bg-gray-100 p-1 shadow-sm">
+        <button data-tab="tasks" class="tab-btn px-5 py-2 rounded-full text-sm font-medium bg-white shadow transition">Tâches</button>
+        <button data-tab="accounts" class="tab-btn px-5 py-2 rounded-full text-sm font-medium text-gray-600 hover:text-gray-900">Comptes</button>
+      </div>
     </nav>
 
     <!-- Auth view -->
     <main id="authView" class="flex-grow flex justify-center items-center px-4">
-      <div class="bg-white rounded-xl shadow-lg p-8 max-w-md w-full border border-gray-200">
+      <div class="bg-white rounded-2xl shadow-soft p-8 max-w-md w-full border border-gray-100">
         <div class="text-center mb-8">
           <span class="text-5xl select-none">🏕️</span>
-          <h2 class="mt-4 text-2xl font-semibold text-gray-800">Connexion</h2>
+          <h2 class="mt-4 text-2xl font-semibold text-gray-800 tracking-tight">Connexion</h2>
         </div>
         <form id="loginForm" class="space-y-6">
           <div>
             <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-            <input id="email" type="email" required class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-400 focus:border-primary-600 transition" placeholder="exemple@exemple.com" />
+            <input id="email" type="email" required class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary-300 focus:border-primary-500 transition" placeholder="exemple@exemple.com" />
           </div>
           <div>
             <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Mot de passe</label>
-            <input id="password" type="password" required class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-400 focus:border-primary-600 transition" placeholder="••••••••" />
+            <input id="password" type="password" required class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary-300 focus:border-primary-500 transition" placeholder="••••••••" />
           </div>
-          <button class="w-full bg-primary-600 text-white py-3 rounded-lg font-semibold hover:bg-primary-700 shadow-md transition">Se connecter</button>
+          <button class="w-full bg-primary-600 text-white py-3 rounded-xl font-semibold hover:bg-primary-700 shadow-md transition">Se connecter</button>
         </form>
 
         <div class="my-6 flex items-center gap-3">
-          <div class="flex-1 h-px bg-gray-300"></div>
+          <div class="flex-1 h-px bg-gray-200"></div>
           <span class="text-xs text-gray-500">ou</span>
-          <div class="flex-1 h-px bg-gray-300"></div>
+          <div class="flex-1 h-px bg-gray-200"></div>
         </div>
 
-        <button id="googleBtn" class="w-full flex items-center justify-center gap-3 border border-gray-300 rounded-xl py-3 hover:bg-gray-50 transition">
+        <button id="googleBtn" class="w-full flex items-center justify-center gap-3 border border-gray-200 rounded-xl py-3 hover:bg-gray-50 transition">
           <img alt="Google" src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-6 h-6" />
           <span class="font-medium text-gray-700">Continuer avec Google</span>
         </button>
@@ -115,25 +114,29 @@
 
     <!-- App view -->
     <main id="appView" class="hidden flex-grow max-w-6xl mx-auto px-6 py-8 flex flex-col">
-      <!-- Controls -->
-      <details class="mb-6 bg-white rounded-xl shadow-md p-4 md:p-6 open:shadow-lg transition" open>
-        <summary class="md:hidden text-base font-semibold cursor-pointer select-none">Filtres & recherche</summary>
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4 md:mt-0">
-          <select id="teamFilter" class="px-4 py-3 rounded-xl border border-gray-300 bg-white font-medium focus:ring-2 focus:ring-primary-400 focus:border-primary-600 transition" aria-label="Filtrer par équipe">
+      <!-- PATCH: Carte filtres premium -->
+      <details class="mb-6 bg-white rounded-2xl shadow-lg p-4 md:p-6 open:shadow-xl transition" open>
+        <summary class="md:hidden text-base font-semibold cursor-pointer select-none flex items-center gap-2">
+          <span>▾</span> Filtres & recherche
+        </summary>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-3 md:gap-4 mt-4 md:mt-0">
+          <select id="teamFilter" class="px-4 py-3 rounded-xl border border-gray-200 bg-white font-medium focus:ring-2 focus:ring-primary-300 focus:border-primary-500 transition" aria-label="Filtrer par équipe">
             <option value="ALL">Toutes les équipes</option>
             <option value="Reception">Réception</option>
             <option value="Technique">Technique</option>
             <option value="Menage">Ménage</option>
           </select>
-          <select id="statusFilter" class="px-4 py-3 rounded-xl border border-gray-300 bg-white font-medium focus:ring-2 focus:ring-primary-400 focus:border-primary-600 transition" aria-label="Filtrer par statut">
+          <select id="statusFilter" class="px-4 py-3 rounded-xl border border-gray-200 bg-white font-medium focus:ring-2 focus:ring-primary-300 focus:border-primary-500 transition" aria-label="Filtrer par statut">
             <option value="ACTIVE">Statuts actifs</option>
             <option value="A_faire">À faire</option>
             <option value="En_cours">En cours</option>
             <option value="Bloque">Bloqué</option>
             <option value="Termine">Terminé</option>
           </select>
-          <input id="searchInput" type="search" placeholder="Rechercher une tâche…" class="px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-primary-400 focus:border-primary-600 transition font-medium" aria-label="Recherche tâches" />
-          <button id="newTaskBtn" class="hidden md:block justify-self-end px-6 py-3 rounded-xl bg-primary-600 text-white font-semibold hover:bg-primary-700 shadow-md transition">+ Nouvelle tâche</button>
+          <input id="searchInput" type="search" placeholder="Rechercher une tâche…" class="px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary-300 focus:border-primary-500 transition font-medium" aria-label="Recherche tâches" />
+          <div class="flex md:justify-end">
+            <button id="newTaskBtn" class="w-full md:w-auto px-6 py-3 rounded-xl bg-primary-600 text-white font-semibold hover:bg-primary-700 shadow-md transition">+ Nouvelle tâche</button>
+          </div>
         </div>
       </details>
 
@@ -145,25 +148,28 @@
       <!-- Drawer: create/edit task -->
       <div id="drawer" class="hidden fixed inset-0 z-30 flex">
         <div class="absolute inset-0 bg-black/40 transition-opacity" id="drawerBackdrop"></div>
-        <div class="absolute right-0 top-0 h-full w-full sm:w-[480px] bg-white shadow-2xl flex flex-col">
-          <div class="p-6 border-b flex items-center justify-between sticky top-0 bg-white z-10">
-            <h3 id="drawerTitle" class="text-xl font-semibold text-gray-800">Nouvelle tâche</h3>
-            <button id="drawerClose" class="text-gray-500 hover:text-gray-700 focus:outline-none" aria-label="Fermer la fenêtre">✕</button>
+
+        <!-- PATCH: drawer arrondi + blur -->
+        <div class="absolute right-0 top-0 h-full w-full sm:w-[480px] bg-white/95 backdrop-blur shadow-2xl rounded-l-2xl flex flex-col">
+          <div class="p-6 border-b flex items-center justify-between sticky top-0 bg-white/80 backdrop-blur z-10">
+            <h3 id="drawerTitle" class="text-lg font-semibold text-gray-800">Nouvelle tâche</h3>
+            <button id="drawerClose" class="rounded-full w-8 h-8 grid place-items-center hover:bg-gray-100" aria-label="Fermer la fenêtre">✕</button>
           </div>
+
           <form id="taskForm" class="flex-1 overflow-y-auto p-6 space-y-6">
             <input type="hidden" id="taskId" />
             <div>
               <label for="title" class="block text-sm font-medium mb-2 text-gray-700">Titre</label>
-              <input id="title" required class="w-full rounded-lg border border-gray-300 px-4 py-3 focus:ring-2 focus:ring-primary-400 focus:border-primary-600 transition font-medium" />
+              <input id="title" required class="w-full rounded-xl border border-gray-200 px-4 py-3 focus:ring-2 focus:ring-primary-300 focus:border-primary-500 transition font-medium" />
             </div>
             <div>
               <label for="description" class="block text-sm font-medium mb-2 text-gray-700">Description</label>
-              <textarea id="description" rows="4" class="w-full rounded-lg border border-gray-300 px-4 py-3 focus:ring-2 focus:ring-primary-400 focus:border-primary-600 transition font-medium resize-y"></textarea>
+              <textarea id="description" rows="4" class="w-full rounded-xl border border-gray-200 px-4 py-3 focus:ring-2 focus:ring-primary-300 focus:border-primary-500 transition font-medium resize-y"></textarea>
             </div>
             <div class="grid grid-cols-2 gap-6">
               <div>
                 <label for="team" class="block text-sm font-medium mb-2 text-gray-700">Équipe</label>
-                <select id="team" class="w-full rounded-lg border border-gray-300 px-4 py-3 focus:ring-2 focus:ring-primary-400 focus:border-primary-600 transition font-medium">
+                <select id="team" class="w-full rounded-xl border border-gray-200 px-4 py-3 focus:ring-2 focus:ring-primary-300 focus:border-primary-500 transition font-medium">
                   <option>Reception</option>
                   <option>Technique</option>
                   <option>Menage</option>
@@ -171,7 +177,7 @@
               </div>
               <div>
                 <label for="priority" class="block text-sm font-medium mb-2 text-gray-700">Priorité</label>
-                <select id="priority" class="w-full rounded-lg border border-gray-300 px-4 py-3 focus:ring-2 focus:ring-primary-400 focus:border-primary-600 transition font-medium">
+                <select id="priority" class="w-full rounded-xl border border-gray-200 px-4 py-3 focus:ring-2 focus:ring-primary-300 focus:border-primary-500 transition font-medium">
                   <option>Normale</option>
                   <option>Haute</option>
                   <option>Urgent</option>
@@ -181,11 +187,11 @@
             <div class="grid grid-cols-2 gap-6">
               <div>
                 <label for="dueDate" class="block text-sm font-medium mb-2 text-gray-700">Échéance</label>
-                <input id="dueDate" type="date" class="w-full rounded-lg border border-gray-300 px-4 py-3 focus:ring-2 focus:ring-primary-400 focus:border-primary-600 transition font-medium" />
+                <input id="dueDate" type="date" class="w-full rounded-xl border border-gray-200 px-4 py-3 focus:ring-2 focus:ring-primary-300 focus:border-primary-500 transition font-medium" />
               </div>
               <div>
                 <label for="status" class="block text-sm font-medium mb-2 text-gray-700">Statut</label>
-                <select id="status" class="w-full rounded-lg border border-gray-300 px-4 py-3 focus:ring-2 focus:ring-primary-400 focus:border-primary-600 transition font-medium">
+                <select id="status" class="w-full rounded-xl border border-gray-200 px-4 py-3 focus:ring-2 focus:ring-primary-300 focus:border-primary-500 transition font-medium">
                   <option>A_faire</option>
                   <option>En_cours</option>
                   <option>Bloque</option>
@@ -195,23 +201,23 @@
             </div>
             <div>
               <label for="assignee" class="block text-sm font-medium mb-2 text-gray-700">Attribuer à (optionnel)</label>
-              <input id="assignee" placeholder="Nom du salarié" class="w-full rounded-lg border border-gray-300 px-4 py-3 focus:ring-2 focus:ring-primary-400 focus:border-primary-600 transition font-medium" />
+              <input id="assignee" placeholder="Nom du salarié" class="w-full rounded-xl border border-gray-200 px-4 py-3 focus:ring-2 focus:ring-primary-300 focus:border-primary-500 transition font-medium" />
             </div>
             <div class="flex items-center gap-4">
-              <button class="px-6 py-3 rounded-lg bg-primary-600 text-white font-semibold hover:bg-primary-700 shadow-md transition">Enregistrer</button>
-              <button type="button" id="deleteBtn" class="hidden px-6 py-3 rounded-lg bg-red-600 text-white font-semibold hover:bg-red-700 shadow-md transition">Supprimer</button>
+              <button class="px-6 py-3 rounded-xl bg-primary-600 text-white font-semibold hover:bg-primary-700 shadow-md transition">Enregistrer</button>
+              <button type="button" id="deleteBtn" class="hidden px-6 py-3 rounded-xl bg-red-600 text-white font-semibold hover:bg-red-700 shadow-md transition">Supprimer</button>
             </div>
           </form>
         </div>
       </div>
 
       <!-- FAB mobile -->
-      <button id="fabNewTask" class="hidden fab bg-primary-600 text-white px-6 py-4 text-lg shadow-lg hover:bg-primary-700 transition" aria-label="Nouvelle tâche">+</button>
+      <button id="fabNewTask" class="hidden md:hidden fab bg-primary-600 text-white w-12 h-12 rounded-full text-2xl leading-none grid place-items-center shadow-lg hover:bg-primary-700" aria-label="Nouvelle tâche">+</button>
     </main>
 
     <!-- Accounts view -->
     <section id="accountsView" class="hidden max-w-6xl mx-auto px-6 py-8 flex flex-col gap-6">
-      <div class="bg-white rounded-xl shadow-md p-6 border border-gray-200">
+      <div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
         <h3 class="font-semibold text-lg mb-2">Gestion des comptes</h3>
         <p class="text-xs text-gray-500 mb-6">Les salariés doivent d’abord se connecter (Google ou email/mot de passe). Ensuite, vous pouvez leur attribuer un rôle ci-dessous.</p>
         <div id="usersList" class="space-y-3 text-sm"></div>
@@ -219,7 +225,7 @@
     </section>
   </div>
 
-  <!-- Firebase SDKs et JS amélioré -->
+  <!-- Firebase SDKs et JS -->
   <script type="module">
     // ----------------------
     // 1) CONFIGURATION
@@ -267,7 +273,9 @@
     const usersList = document.getElementById('usersList');
     const googleBtn = $('googleBtn');
 
+    // PATCH: navigation onglets sécurisée (ne rien faire si non connecté)
     function showTab(key){
+      if (tabs.classList.contains('hidden')) return; // important
       const taskActive = key === 'tasks';
       if (taskActive) { 
         appView.classList.remove('hidden'); 
@@ -278,11 +286,9 @@
       }
       document.querySelectorAll('.tab-btn').forEach(btn=>{
         const active = btn.dataset.tab === key;
-        btn.classList.toggle('bg-primary-600', active);
-        btn.classList.toggle('text-white', active);
-        btn.classList.toggle('bg-white', !active);
-        btn.classList.toggle('border', !active);
-        btn.classList.toggle('text-gray-700', !active);
+        btn.classList.toggle('bg-white', active);
+        btn.classList.toggle('shadow', active);
+        btn.classList.toggle('text-gray-600', !active);
       });
     }
     document.addEventListener('click', (e) => {
@@ -296,20 +302,22 @@
       { key: 'Termine', title: 'Terminé' },
     ];
 
-    function priorityPill(priority) {
-      switch (priority) {
-        case 'Urgent': return 'bg-red-100 text-red-700';
-        case 'Haute': return 'bg-amber-100 text-amber-700';
-        default: return 'bg-gray-100 text-gray-700';
+    // PATCH: couleurs plus UI
+    function priorityPill(p) {
+      switch (p) {
+        case 'Urgent': return 'bg-red-50 text-red-700 ring-1 ring-red-200';
+        case 'Haute':  return 'bg-amber-50 text-amber-700 ring-1 ring-amber-200';
+        default:       return 'bg-gray-50 text-gray-700 ring-1 ring-gray-200';
       }
     }
-    function priorityBorder(priority) {
-      switch(priority) {
-        case "Urgent": return "border-l-4 border-red-500";
-        case "Haute": return "border-l-4 border-amber-500";
-        default: return "border-l-4 border-gray-300";
+    function priorityBorder(p) {
+      switch (p) {
+        case 'Urgent': return 'border-l-4 border-red-400';
+        case 'Haute':  return 'border-l-4 border-amber-400';
+        default:       return 'border-l-4 border-gray-200';
       }
     }
+
     function escapeHtml(s = '') {
       return s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
     }
@@ -317,35 +325,44 @@
       try { return new Date(iso).toLocaleDateString('fr-FR'); } catch { return iso; }
     }
 
+    // PATCH: header de colonne avec compteur
+    function columnHeader(title, count) {
+      return `
+        <div class="flex items-center justify-between mb-3">
+          <div class="uppercase text-[11px] tracking-wider text-gray-500 font-semibold">${title}</div>
+          <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-700">${count}</span>
+        </div>`;
+    }
+
     function renderBoard(tasks) {
       board.innerHTML = '';
       for (const col of statusColumns) {
         const colEl = document.createElement('div');
-        colEl.className = 'col bg-white rounded-xl shadow-md p-4 min-h-[220px] flex flex-col';
-        // Header stylisé
-        const header = document.createElement('div');
-        header.className = 'uppercase text-xs tracking-wide text-gray-500 font-medium mb-3';
-        header.textContent = col.title;
-        colEl.appendChild(header);
-
+        colEl.className = 'col bg-white rounded-2xl shadow-lg p-4 min-h-[220px] flex flex-col border border-gray-100';
         const list = document.createElement('div');
         list.className = 'space-y-3 flex-grow overflow-auto';
+
         const filtered = tasks.filter(t => t.status === col.key);
+        colEl.innerHTML = columnHeader(col.title, filtered.length);
+
         if (filtered.length === 0) {
-          list.innerHTML = '<div class="text-sm text-gray-400 select-none">Aucune tâche</div>';
+          list.innerHTML = `
+            <div class="text-center text-sm text-gray-400 py-6 select-none border border-dashed rounded-xl">
+              Aucune tâche
+            </div>`;
         } else {
           for (const t of filtered) {
             const card = document.createElement('div');
-            card.className = `rounded-xl border bg-white p-4 shadow-sm hover:shadow-lg transition cursor-pointer ${priorityBorder(t.priority)}`;
+            card.className = `task-card rounded-2xl border border-gray-200 bg-white p-4 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition ${priorityBorder(t.priority)} animate-pop`;
             card.innerHTML = `
-              <div class="flex items-start justify-between">
-                <div>
-                  <div class="font-semibold text-gray-900">${escapeHtml(t.title)}</div>
-                  <div class="text-xs text-gray-500 mt-0.5">${t.team}${t.assignee ? ' · ' + escapeHtml(t.assignee) : ''}</div>
+              <div class="flex items-start justify-between gap-3">
+                <div class="min-w-0">
+                  <div class="font-semibold text-gray-900 truncate">${escapeHtml(t.title)}</div>
+                  <div class="text-xs text-gray-500 mt-1 truncate">${t.team}${t.assignee ? ' · ' + escapeHtml(t.assignee) : ''}</div>
                 </div>
-                <span class="text-[10px] px-2 py-1 rounded-full ${priorityPill(t.priority)} font-semibold select-none">${t.priority || 'Normale'}</span>
+                <span class="text-[10px] px-2 py-1 rounded-full ${priorityPill(t.priority)} font-semibold whitespace-nowrap">${t.priority || 'Normale'}</span>
               </div>
-              ${t.dueDate ? `<div class="text-xs mt-3 text-gray-600 select-none">Échéance : ${formatDate(t.dueDate)}</div>` : ''}
+              ${t.dueDate ? `<div class="text-xs mt-3 text-gray-600 flex items-center gap-1">🗓️ <span>${formatDate(t.dueDate)}</span></div>` : ''}
             `;
             card.addEventListener('click', () => openDrawer(t));
             list.appendChild(card);
@@ -370,7 +387,7 @@
         $('assignee').value = task.assignee || '';
         deleteBtn.classList.remove('hidden');
         deleteBtn.onclick = async () => {
-          if (!confirm('Supprimer cette tâche ?')) return;
+          if (!confirm('Supprimer cette tâche ?')) return;
           await deleteDoc(doc(db, 'tasks', task.id));
           closeDrawer();
         };
@@ -383,10 +400,7 @@
       }
     }
 
-    function closeDrawer() {
-      drawer.classList.add('hidden');
-    }
-
+    function closeDrawer() { drawer.classList.add('hidden'); }
     drawerBackdrop.addEventListener('click', closeDrawer);
     drawerClose.addEventListener('click', closeDrawer);
 
@@ -415,11 +429,8 @@
 
     const provider = new GoogleAuthProvider();
     googleBtn.addEventListener('click', async () => {
-      try {
-        await signInWithPopup(auth, provider);
-      } catch (e) {
-        alert('Connexion Google impossible: ' + (e?.message || e));
-      }
+      try { await signInWithPopup(auth, provider); }
+      catch (e) { alert('Connexion Google impossible: ' + (e?.message || e)); }
     });
 
     logoutBtn.addEventListener('click', () => signOut(auth));
@@ -435,37 +446,37 @@
     let unsubTasks = null;
     let currentRole = 'Employe';
 
-onAuthStateChanged(auth, async (user) => {
-  if (user) {
-    await ensureUserDoc(user);
-    currentRole = await getUserRole(user.uid);
-    userRoleEl.textContent = `${user.email} · Rôle : ${currentRole}`;
-    authView.classList.add('hidden');
-    appView.classList.remove('hidden');
-    logoutBtn.classList.remove('hidden');
-    newTaskBtn.classList.toggle('hidden', !['Responsable','Reception'].includes(currentRole));
-    fabNewTask.classList.toggle('hidden', !['Responsable','Reception'].includes(currentRole));
-    attachTaskListener();
-    tabs.classList.remove('hidden');
-    accountsView.classList.toggle('hidden', currentRole !== 'Responsable');
-    if (currentRole !== 'Responsable') {
-      document.querySelector('[data-tab="accounts"]').setAttribute('disabled','true');
-    } else {
-      document.querySelector('[data-tab="accounts"]').removeAttribute('disabled');
-      startUsersListener();
-    }
-    showTab('tasks');
-  } else {
-    if (unsubTasks) unsubTasks();
-    authView.classList.remove('hidden');
-    appView.classList.add('hidden');
-    accountsView.classList.add('hidden');
-    userRoleEl.textContent = '';
-    logoutBtn.classList.add('hidden');
-    tabs.classList.add('hidden');
-  }
-});
-
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        await ensureUserDoc(user);
+        currentRole = await getUserRole(user.uid);
+        userRoleEl.textContent = `${user.email} · Rôle : ${currentRole}`;
+        authView.classList.add('hidden');
+        appView.classList.remove('hidden');
+        logoutBtn.classList.remove('hidden');
+        newTaskBtn.classList.toggle('hidden', !['Responsable','Reception'].includes(currentRole));
+        fabNewTask.classList.toggle('hidden', !['Responsable','Reception'].includes(currentRole));
+        attachTaskListener();
+        tabs.classList.remove('hidden');
+        accountsView.classList.toggle('hidden', currentRole !== 'Responsable');
+        if (currentRole !== 'Responsable') {
+          document.querySelector('[data-tab="accounts"]').setAttribute('disabled','true');
+        } else {
+          document.querySelector('[data-tab="accounts"]').removeAttribute('disabled');
+          startUsersListener();
+        }
+        showTab('tasks');
+      } else {
+        if (unsubTasks) unsubTasks();
+        authView.classList.remove('hidden');
+        appView.classList.add('hidden');
+        accountsView.classList.add('hidden');
+        userRoleEl.textContent = '';
+        logoutBtn.classList.add('hidden');
+        tabs.classList.add('hidden');
+        // PATCH: on NE rappelle PAS showTab('tasks') ici, pour ne pas réafficher la vue
+      }
+    });
 
     function attachTaskListener() {
       if (unsubTasks) unsubTasks();
@@ -497,21 +508,21 @@ onAuthStateChanged(auth, async (user) => {
         snap.forEach(d=>{
           const u = { id: d.id, ...d.data() };
           const row = document.createElement('div');
-          row.className = 'flex items-center justify-between border rounded-lg p-3 bg-gray-50 hover:bg-gray-100 transition';
+          row.className = 'flex items-center justify-between border rounded-xl p-3 bg-gray-50 hover:bg-gray-100 transition';
           row.innerHTML = `
             <div class="truncate max-w-[60vw]">
               <div class="font-medium text-gray-900 truncate">${u.email || u.id}</div>
               <div class="text-[11px] text-gray-500 select-none">UID: ${u.id}</div>
             </div>
             <div class="flex items-center gap-3">
-              <select class="px-3 py-2 rounded border border-gray-300 font-medium focus:ring-2 focus:ring-primary-400 focus:border-primary-600 transition" aria-label="Rôle utilisateur">
+              <select class="px-3 py-2 rounded border border-gray-200 font-medium focus:ring-2 focus:ring-primary-300 focus:border-primary-500 transition" aria-label="Rôle utilisateur">
                 <option ${u.role==='Employe'?'selected':''}>Employe</option>
                 <option ${u.role==='Menage'?'selected':''}>Menage</option>
                 <option ${u.role==='Technique'?'selected':''}>Technique</option>
                 <option ${u.role==='Reception'?'selected':''}>Reception</option>
                 <option ${u.role==='Responsable'?'selected':''}>Responsable</option>
               </select>
-              <button class="px-4 py-2 rounded bg-primary-600 text-white font-semibold hover:bg-primary-700 transition" aria-label="Enregistrer le rôle">Enregistrer</button>
+              <button class="px-4 py-2 rounded-xl bg-primary-600 text-white font-semibold hover:bg-primary-700 transition" aria-label="Enregistrer le rôle">Enregistrer</button>
             </div>`;
           const select = row.querySelector('select');
           const saveBtn = row.querySelector('button');
@@ -557,8 +568,5 @@ onAuthStateChanged(auth, async (user) => {
       }
     });
   </script>
-
-  <!-- Firestore security rules et notes sont inchangés -->
-
 </body>
 </html>
