@@ -399,41 +399,51 @@
       }
     }
 
-    function renderBoard(tasks){
-      board.innerHTML='';
-      for(const col of statusColumns){
-        const colEl=document.createElement('div');
-        colEl.className='col panel p-4 min-h-[220px]';
-        const list=document.createElement('div'); list.className='grid gap-3';
-        const filtered = tasks.filter(t=>t.status===col.key);
-        colEl.innerHTML = `
-          <div class="flex items-center justify-between mb-3">
-            <div class="uppercase text-[11px] tracking-wider text-gray-500 font-semibold">${col.title}</div>
-            <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-700">${filtered.length}</span>
-          </div>`;
-        if(!filtered.length){
-          list.innerHTML = `<div class="text-center text-sm text-gray-400 py-6 border border-dashed rounded-xl">Aucune tâche</div>`;
-        }else{
-          for(const t of filtered){
-            const card=document.createElement('div');
-            card.className=`task-card ${prBar(t.priority)} animate-pop cursor-pointer`;
-            card.innerHTML = `
-              <div class="flex items-start justify-between gap-3">
-                <div class="min-w-0">
-                  <div class="font-semibold text-gray-900 truncate">${esc(t.title)}</div>
-                  <div class="text-xs text-[var(--text-dim)] mt-1 truncate">${t.team}${t.assignee ? ' · '+esc(t.assignee):''}</div>
-                </div>
-                <span class="${prPill(t.priority)} whitespace-nowrap">${t.priority||'Normale'}</span>
-              </div>
-              ${t.dueDate ? `<div class="text-xs mt-3 text-gray-600">🗓️ ${fdate(t.dueDate)}</div>` : ''}`;
-            card.onclick=()=>openDrawer(t);
-            list.appendChild(card);
-          }
-        }
-        colEl.appendChild(list);
-        board.appendChild(colEl);
+function renderBoard(tasks){
+  board.innerHTML='';
+  for(const col of statusColumns){
+    const colEl = document.createElement('div');
+    colEl.className = 'board-col';
+
+    const filtered = tasks.filter(t=>t.status===col.key);
+
+    colEl.innerHTML = `
+      <div class="col-head">
+        <div class="col-title">${col.title}</div>
+        <span class="col-count">${filtered.length}</span>
+      </div>
+      <div class="grid gap-3"></div>
+    `;
+
+    const list = colEl.querySelector('div.grid');
+
+    if(!filtered.length){
+      list.innerHTML = `<div class="empty">Aucune tâche</div>`;
+    } else {
+      for(const t of filtered){
+        const prBar = t.priority==='Urgent' ? 'bar-urgent' : (t.priority==='Haute' ? 'bar-haute' : 'bar-normale');
+        const prPill = t.priority==='Urgent' ? 'pill red' : (t.priority==='Haute' ? 'pill amber' : 'pill gray');
+
+        const card = document.createElement('div');
+        card.className = `task-card ${prBar} cursor-pointer`;
+        card.innerHTML = `
+          <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0">
+              <div class="task-title truncate">${esc(t.title)}</div>
+              <div class="task-meta truncate">${t.team}${t.assignee ? ' · '+esc(t.assignee) : ''}</div>
+            </div>
+            <span class="${prPill} whitespace-nowrap">${t.priority || 'Normale'}</span>
+          </div>
+          ${t.dueDate ? `<div class="text-xs mt-3 text-gray-600">🗓️ ${fdate(t.dueDate)}</div>` : ''}
+        `;
+        card.addEventListener('click',()=>openDrawer(t));
+        list.appendChild(card);
       }
     }
+    board.appendChild(colEl);
+  }
+}
+
 
     function openDrawer(task=null){
       drawer.classList.remove('hidden');
@@ -583,7 +593,6 @@
   </script>
 </body>
 </html>
-
 
 
 
