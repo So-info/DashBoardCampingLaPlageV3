@@ -14,8 +14,12 @@
           colors: {
             primary: {
               50: '#eef2ff', 100: '#e0e7ff', 200: '#c7d2fe', 300: '#a5b4fc',
-              400: '#818cf8', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca', 800: '#3730a3', 900: '#312e81'
+              400: '#818cf8', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca',
+              800: '#3730a3', 900: '#312e81'
             }
+          },
+          borderRadius: {
+            'xl': '1rem'
           }
         }
       }
@@ -23,146 +27,165 @@
   </script>
   <style>
     @media (max-width: 767px) {
-      #boardWrapper { display:flex; gap:.75rem; overflow-x:auto; -webkit-overflow-scrolling:touch; scroll-snap-type:x mandatory; padding-bottom:1rem; }
-      #boardWrapper > .col { min-width:88%; scroll-snap-align:start; }
+      #boardWrapper {
+        display: flex;
+        gap: 1rem;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scroll-snap-type: x mandatory;
+        padding-bottom: 1rem;
+      }
+      #boardWrapper > .col {
+        min-width: 90%;
+        scroll-snap-align: start;
+      }
     }
     button, select, input, textarea { touch-action: manipulation; }
-    .fab { position:fixed; right:1rem; bottom:1rem; z-index:30; border-radius:9999px; box-shadow:0 10px 25px rgba(0,0,0,.15); }
+    .fab {
+      position: fixed;
+      right: 1rem;
+      bottom: 1rem;
+      z-index: 30;
+      border-radius: 9999px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, .15);
+      transition: background-color 0.3s ease;
+    }
   </style>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🏕️</text></svg>">
 </head>
-<body class="bg-gray-50 text-gray-800">
+<body class="text-gray-800 antialiased selection:bg-primary-200 selection:text-primary-900 bg-gray-50">
   <!-- App container -->
-  <div id="app" class="min-h-screen">
+  <div id="app" class="min-h-screen flex flex-col">
     <!-- Header -->
-    <header class="sticky top-0 z-10 bg-white border-b border-gray-200">
-      <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <span class="text-2xl">🏕️</span>
-          <h1 class="text-xl font-semibold">Dashboard Camping</h1>
-          <span id="envBadge" class="hidden ml-3 text-xs px-2 py-1 rounded-full bg-primary-100 text-primary-700">Démo</span>
+    <header class="sticky top-0 z-20 bg-white border-b border-gray-200 shadow-sm">
+      <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-4">
+          <span class="text-3xl select-none">🏕️</span>
+          <h1 class="text-2xl font-semibold tracking-tight text-primary-700">Dashboard Camping</h1>
+          <span id="envBadge" class="hidden ml-4 text-xs px-3 py-1 rounded-full bg-primary-100 text-primary-700 select-none">Démo</span>
         </div>
-        <div class="flex items-center gap-3">
-          <span id="userRole" class="text-sm text-gray-600"></span>
-          <button id="logoutBtn" class="hidden text-sm px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200">Se déconnecter</button>
+        <div class="flex items-center gap-6">
+          <span id="userRole" class="text-sm text-gray-600 font-medium truncate max-w-xs"></span>
+          <button id="logoutBtn" class="hidden text-sm px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition">Se déconnecter</button>
         </div>
       </div>
     </header>
 
     <!-- Onglets (cachés tant que non connecté) -->
-    <nav id="tabs" class="hidden max-w-6xl mx-auto px-4 mt-3">
-      <ul class="flex gap-2 text-sm">
-        <li><button data-tab="tasks" class="tab-btn px-3 py-2 rounded-lg bg-primary-600 text-white">Tâches</button></li>
-        <li><button data-tab="accounts" class="tab-btn px-3 py-2 rounded-lg bg-white border">Comptes</button></li>
+    <nav id="tabs" class="hidden max-w-6xl mx-auto px-6 mt-4 sticky top-16 z-20 bg-white/90 backdrop-blur-sm rounded-full shadow-sm">
+      <ul class="flex gap-3 text-sm font-medium select-none">
+        <li><button data-tab="tasks" class="tab-btn px-5 py-2 rounded-full bg-primary-600 text-white shadow-sm transition hover:bg-primary-700">Tâches</button></li>
+        <li><button data-tab="accounts" class="tab-btn px-5 py-2 rounded-full bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 transition">Comptes</button></li>
       </ul>
     </nav>
 
     <!-- Auth view -->
-    <main id="authView" class="max-w-md mx-auto mt-16 px-4">
-      <div class="bg-white rounded-2xl shadow p-6">
-        <h2 class="text-lg font-semibold mb-6">Connexion</h2>
-        <form id="loginForm" class="space-y-3">
+    <main id="authView" class="flex-grow flex justify-center items-center px-4">
+      <div class="bg-white rounded-xl shadow-lg p-8 max-w-md w-full border border-gray-200">
+        <div class="text-center mb-8">
+          <span class="text-5xl select-none">🏕️</span>
+          <h2 class="mt-4 text-2xl font-semibold text-gray-800">Connexion</h2>
+        </div>
+        <form id="loginForm" class="space-y-6">
           <div>
-            <label class="block text-sm mb-1">Email</label>
-            <input id="email" type="email" required class="w-full px-3 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-primary-400">
+            <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <input id="email" type="email" required class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-400 focus:border-primary-600 transition" placeholder="exemple@exemple.com" />
           </div>
           <div>
-            <label class="block text-sm mb-1">Mot de passe</label>
-            <input id="password" type="password" required class="w-full px-3 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-primary-400">
+            <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Mot de passe</label>
+            <input id="password" type="password" required class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-400 focus:border-primary-600 transition" placeholder="••••••••" />
           </div>
-          <button class="w-full bg-primary-600 text-white py-2 rounded-lg hover:bg-primary-700">Se connecter</button>
+          <button class="w-full bg-primary-600 text-white py-3 rounded-lg font-semibold hover:bg-primary-700 shadow-md transition">Se connecter</button>
         </form>
 
-        <div class="my-4 flex items-center gap-3">
-          <div class="flex-1 h-px bg-gray-200"></div>
+        <div class="my-6 flex items-center gap-3">
+          <div class="flex-1 h-px bg-gray-300"></div>
           <span class="text-xs text-gray-500">ou</span>
-          <div class="flex-1 h-px bg-gray-200"></div>
+          <div class="flex-1 h-px bg-gray-300"></div>
         </div>
 
-        <button id="googleBtn" class="w-full flex items-center justify-center gap-2 border rounded-xl py-2 hover:bg-gray-50">
-          <img alt="Google" src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5"/>
-          <span>Continuer avec Google</span>
+        <button id="googleBtn" class="w-full flex items-center justify-center gap-3 border border-gray-300 rounded-xl py-3 hover:bg-gray-50 transition">
+          <img alt="Google" src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-6 h-6" />
+          <span class="font-medium text-gray-700">Continuer avec Google</span>
         </button>
 
-        <p class="text-xs text-gray-500 mt-4">Pas de compte ? Utilisez Google ou demandez à votre Responsable.</p>
+        <p class="text-xs text-gray-500 mt-6 text-center">Pas de compte ? Utilisez Google ou demandez à votre Responsable.</p>
       </div>
     </main>
 
     <!-- App view -->
-    <main id="appView" class="hidden max-w-6xl mx-auto px-4 py-6">
+    <main id="appView" class="hidden flex-grow max-w-6xl mx-auto px-6 py-8 flex flex-col">
       <!-- Controls -->
-      <details class="mb-3 md:mb-4 bg-white rounded-2xl shadow open:shadow p-3 md:p-4" open>
-        <summary class="md:hidden text-sm font-medium cursor-pointer select-none">Filtres & recherche</summary>
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mt-2 md:mt-0">
-          <select id="teamFilter" class="px-3 py-3 rounded-xl border bg-white">
+      <details class="mb-6 bg-white rounded-xl shadow-md p-4 md:p-6 open:shadow-lg transition" open>
+        <summary class="md:hidden text-base font-semibold cursor-pointer select-none">Filtres & recherche</summary>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4 md:mt-0">
+          <select id="teamFilter" class="px-4 py-3 rounded-xl border border-gray-300 bg-white font-medium focus:ring-2 focus:ring-primary-400 focus:border-primary-600 transition" aria-label="Filtrer par équipe">
             <option value="ALL">Toutes les équipes</option>
             <option value="Reception">Réception</option>
             <option value="Technique">Technique</option>
             <option value="Menage">Ménage</option>
           </select>
-          <select id="statusFilter" class="px-3 py-3 rounded-xl border bg-white">
+          <select id="statusFilter" class="px-4 py-3 rounded-xl border border-gray-300 bg-white font-medium focus:ring-2 focus:ring-primary-400 focus:border-primary-600 transition" aria-label="Filtrer par statut">
             <option value="ACTIVE">Statuts actifs</option>
             <option value="A_faire">À faire</option>
             <option value="En_cours">En cours</option>
             <option value="Bloque">Bloqué</option>
             <option value="Termine">Terminé</option>
           </select>
-          <input id="searchInput" placeholder="Rechercher une tâche…" class="px-3 py-3 rounded-xl border" />
-          <button id="newTaskBtn" class="hidden md:block md:justify-self-end px-4 py-3 rounded-xl bg-primary-600 text-white hover:bg-primary-700">+ Nouvelle tâche</button>
+          <input id="searchInput" type="search" placeholder="Rechercher une tâche…" class="px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-primary-400 focus:border-primary-600 transition font-medium" aria-label="Recherche tâches" />
+          <button id="newTaskBtn" class="hidden md:block justify-self-end px-6 py-3 rounded-xl bg-primary-600 text-white font-semibold hover:bg-primary-700 shadow-md transition">+ Nouvelle tâche</button>
         </div>
       </details>
 
       <!-- Board -->
-      <div id="boardWrapper" class="md:grid md:grid-cols-4 md:gap-4">
-        <div id="board" class="contents md:contents">
-          <!-- Colonnes insérées par JS -->
-        </div>
+      <div id="boardWrapper" class="md:grid md:grid-cols-4 md:gap-6 flex-1 overflow-auto">
+        <div id="board" class="contents md:contents"></div>
       </div>
 
       <!-- Drawer: create/edit task -->
-      <div id="drawer" class="hidden fixed inset-0 z-20">
-        <div class="absolute inset-0 bg-black/30" id="drawerBackdrop"></div>
-        <div class="absolute right-0 top-0 h-full w-full sm:w-[480px] bg-white shadow-2xl p-6 overflow-y-auto">
-          <div class="flex items-center justify-between mb-4">
-            <h3 id="drawerTitle" class="text-lg font-semibold">Nouvelle tâche</h3>
-            <button id="drawerClose" class="text-gray-500 hover:text-gray-700">✕</button>
+      <div id="drawer" class="hidden fixed inset-0 z-30 flex">
+        <div class="absolute inset-0 bg-black/40 transition-opacity" id="drawerBackdrop"></div>
+        <div class="absolute right-0 top-0 h-full w-full sm:w-[480px] bg-white shadow-2xl flex flex-col">
+          <div class="p-6 border-b flex items-center justify-between sticky top-0 bg-white z-10">
+            <h3 id="drawerTitle" class="text-xl font-semibold text-gray-800">Nouvelle tâche</h3>
+            <button id="drawerClose" class="text-gray-500 hover:text-gray-700 focus:outline-none" aria-label="Fermer la fenêtre">✕</button>
           </div>
-          <form id="taskForm" class="space-y-4">
+          <form id="taskForm" class="flex-1 overflow-y-auto p-6 space-y-6">
             <input type="hidden" id="taskId" />
             <div>
-              <label class="block text-sm mb-1">Titre</label>
-              <input id="title" required class="w-full px-3 py-2 rounded-lg border" />
+              <label for="title" class="block text-sm font-medium mb-2 text-gray-700">Titre</label>
+              <input id="title" required class="w-full rounded-lg border border-gray-300 px-4 py-3 focus:ring-2 focus:ring-primary-400 focus:border-primary-600 transition font-medium" />
             </div>
             <div>
-              <label class="block text-sm mb-1">Description</label>
-              <textarea id="description" rows="4" class="w-full px-3 py-2 rounded-lg border"></textarea>
+              <label for="description" class="block text-sm font-medium mb-2 text-gray-700">Description</label>
+              <textarea id="description" rows="4" class="w-full rounded-lg border border-gray-300 px-4 py-3 focus:ring-2 focus:ring-primary-400 focus:border-primary-600 transition font-medium resize-y"></textarea>
             </div>
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid grid-cols-2 gap-6">
               <div>
-                <label class="block text-sm mb-1">Équipe</label>
-                <select id="team" class="w-full px-3 py-2 rounded-lg border">
+                <label for="team" class="block text-sm font-medium mb-2 text-gray-700">Équipe</label>
+                <select id="team" class="w-full rounded-lg border border-gray-300 px-4 py-3 focus:ring-2 focus:ring-primary-400 focus:border-primary-600 transition font-medium">
                   <option>Reception</option>
                   <option>Technique</option>
                   <option>Menage</option>
                 </select>
               </div>
               <div>
-                <label class="block text-sm mb-1">Priorité</label>
-                <select id="priority" class="w-full px-3 py-2 rounded-lg border">
+                <label for="priority" class="block text-sm font-medium mb-2 text-gray-700">Priorité</label>
+                <select id="priority" class="w-full rounded-lg border border-gray-300 px-4 py-3 focus:ring-2 focus:ring-primary-400 focus:border-primary-600 transition font-medium">
                   <option>Normale</option>
                   <option>Haute</option>
                   <option>Urgent</option>
                 </select>
               </div>
             </div>
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid grid-cols-2 gap-6">
               <div>
-                <label class="block text-sm mb-1">Échéance</label>
-                <input id="dueDate" type="date" class="w-full px-3 py-2 rounded-lg border" />
+                <label for="dueDate" class="block text-sm font-medium mb-2 text-gray-700">Échéance</label>
+                <input id="dueDate" type="date" class="w-full rounded-lg border border-gray-300 px-4 py-3 focus:ring-2 focus:ring-primary-400 focus:border-primary-600 transition font-medium" />
               </div>
               <div>
-                <label class="block text-sm mb-1">Statut</label>
-                <select id="status" class="w-full px-3 py-2 rounded-lg border">
+                <label for="status" class="block text-sm font-medium mb-2 text-gray-700">Statut</label>
+                <select id="status" class="w-full rounded-lg border border-gray-300 px-4 py-3 focus:ring-2 focus:ring-primary-400 focus:border-primary-600 transition font-medium">
                   <option>A_faire</option>
                   <option>En_cours</option>
                   <option>Bloque</option>
@@ -171,37 +194,36 @@
               </div>
             </div>
             <div>
-              <label class="block text-sm mb-1">Attribuer à (optionnel)</label>
-              <input id="assignee" placeholder="Nom du salarié" class="w-full px-3 py-2 rounded-lg border" />
+              <label for="assignee" class="block text-sm font-medium mb-2 text-gray-700">Attribuer à (optionnel)</label>
+              <input id="assignee" placeholder="Nom du salarié" class="w-full rounded-lg border border-gray-300 px-4 py-3 focus:ring-2 focus:ring-primary-400 focus:border-primary-600 transition font-medium" />
             </div>
-            <div class="flex items-center gap-2">
-              <button class="px-4 py-2 rounded-lg bg-primary-600 text-white hover:bg-primary-700">Enregistrer</button>
-              <button type="button" id="deleteBtn" class="hidden px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700">Supprimer</button>
+            <div class="flex items-center gap-4">
+              <button class="px-6 py-3 rounded-lg bg-primary-600 text-white font-semibold hover:bg-primary-700 shadow-md transition">Enregistrer</button>
+              <button type="button" id="deleteBtn" class="hidden px-6 py-3 rounded-lg bg-red-600 text-white font-semibold hover:bg-red-700 shadow-md transition">Supprimer</button>
             </div>
           </form>
         </div>
       </div>
 
       <!-- FAB mobile -->
-      <button id="fabNewTask" class="hidden fab bg-primary-600 text-white px-5 py-4 text-base">+ Tâche</button>
+      <button id="fabNewTask" class="hidden fab bg-primary-600 text-white px-6 py-4 text-lg shadow-lg hover:bg-primary-700 transition" aria-label="Nouvelle tâche">+</button>
     </main>
 
     <!-- Accounts view -->
-    <section id="accountsView" class="hidden max-w-6xl mx-auto px-4 py-6">
-      <div class="bg-white rounded-2xl shadow p-4">
-        <h3 class="font-semibold mb-1">Gestion des comptes</h3>
-        <p class="text-xs text-gray-500 mb-4">Les salariés doivent d’abord se connecter (Google ou email/mot de passe). Ensuite, vous pouvez leur attribuer un rôle ci-dessous.</p>
-        <div id="usersList" class="space-y-2 text-sm"></div>
+    <section id="accountsView" class="hidden max-w-6xl mx-auto px-6 py-8 flex flex-col gap-6">
+      <div class="bg-white rounded-xl shadow-md p-6 border border-gray-200">
+        <h3 class="font-semibold text-lg mb-2">Gestion des comptes</h3>
+        <p class="text-xs text-gray-500 mb-6">Les salariés doivent d’abord se connecter (Google ou email/mot de passe). Ensuite, vous pouvez leur attribuer un rôle ci-dessous.</p>
+        <div id="usersList" class="space-y-3 text-sm"></div>
       </div>
     </section>
   </div>
 
-  <!-- Firebase SDKs -->
+  <!-- Firebase SDKs et JS amélioré -->
   <script type="module">
     // ----------------------
     // 1) CONFIGURATION
     // ----------------------
-    // TODO: remplacez par vos informations de projet Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyB0mHA_vMsBiCdzWDACfN4Lhef644NOHDY",
       authDomain: "dashboardcampinglaplagev3.firebaseapp.com",
@@ -211,28 +233,18 @@
       appId: "1:1083060495264:web:03e34965179a671ca6fac5"
     };
 
-    // Démo: si non modifié, badge "Démo" visible
     if (firebaseConfig.apiKey === 'CHANGE_ME') {
       document.getElementById('envBadge').classList.remove('hidden');
     }
 
-    // ----------------------
-    // 2) IMPORTS FIREBASE
-    // ----------------------
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-    import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup, isSignInWithEmailLink, signInWithEmailLink, sendSignInLinkToEmail } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-    import { getFirestore, collection, addDoc, doc, getDoc, setDoc, updateDoc, deleteDoc, serverTimestamp, onSnapshot, query, orderBy, where } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+    import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+    import { getFirestore, collection, addDoc, doc, getDoc, setDoc, updateDoc, deleteDoc, serverTimestamp, onSnapshot, query, orderBy } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // Pour invitations email-link (facultatif, prêt si tu veux l'activer plus tard)
-    const actionCodeSettings = { url: window.location.origin + window.location.pathname, handleCodeInApp: true };
-
-    // ----------------------
-    // 3) UI HELPERS
-    // ----------------------
     const $ = (id) => document.getElementById(id);
     const authView = $('authView');
     const appView = $('appView');
@@ -240,39 +252,40 @@
     const logoutBtn = $('logoutBtn');
     const newTaskBtn = $('newTaskBtn');
     const fabNewTask = $('fabNewTask');
-
     const board = $('board');
     const teamFilter = $('teamFilter');
     const statusFilter = $('statusFilter');
     const searchInput = $('searchInput');
-
     const drawer = $('drawer');
     const drawerBackdrop = $('drawerBackdrop');
     const drawerClose = $('drawerClose');
     const drawerTitle = $('drawerTitle');
     const taskForm = $('taskForm');
     const deleteBtn = $('deleteBtn');
-
-    // Onglets
     const tabs = document.getElementById('tabs');
     const accountsView = document.getElementById('accountsView');
     const usersList = document.getElementById('usersList');
-
     const googleBtn = $('googleBtn');
 
     function showTab(key){
       const taskActive = key === 'tasks';
-      if (taskActive){ appView.classList.remove('hidden'); accountsView.classList.add('hidden'); }
-      else { appView.classList.add('hidden'); accountsView.classList.remove('hidden'); }
+      if (taskActive) { 
+        appView.classList.remove('hidden'); 
+        accountsView.classList.add('hidden'); 
+      } else { 
+        appView.classList.add('hidden'); 
+        accountsView.classList.remove('hidden'); 
+      }
       document.querySelectorAll('.tab-btn').forEach(btn=>{
         const active = btn.dataset.tab === key;
         btn.classList.toggle('bg-primary-600', active);
         btn.classList.toggle('text-white', active);
         btn.classList.toggle('bg-white', !active);
         btn.classList.toggle('border', !active);
+        btn.classList.toggle('text-gray-700', !active);
       });
     }
-    document.addEventListener('click', (e)=>{
+    document.addEventListener('click', (e) => {
       if (e.target.classList.contains('tab-btn')) showTab(e.target.dataset.tab);
     });
 
@@ -283,34 +296,56 @@
       { key: 'Termine', title: 'Terminé' },
     ];
 
+    function priorityPill(priority) {
+      switch (priority) {
+        case 'Urgent': return 'bg-red-100 text-red-700';
+        case 'Haute': return 'bg-amber-100 text-amber-700';
+        default: return 'bg-gray-100 text-gray-700';
+      }
+    }
+    function priorityBorder(priority) {
+      switch(priority) {
+        case "Urgent": return "border-l-4 border-red-500";
+        case "Haute": return "border-l-4 border-amber-500";
+        default: return "border-l-4 border-gray-300";
+      }
+    }
+    function escapeHtml(s = '') {
+      return s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    }
+    function formatDate(iso) {
+      try { return new Date(iso).toLocaleDateString('fr-FR'); } catch { return iso; }
+    }
+
     function renderBoard(tasks) {
       board.innerHTML = '';
       for (const col of statusColumns) {
         const colEl = document.createElement('div');
-        colEl.className = 'col bg-white rounded-2xl shadow p-3 min-h-[200px]';
+        colEl.className = 'col bg-white rounded-xl shadow-md p-4 min-h-[220px] flex flex-col';
+        // Header stylisé
         const header = document.createElement('div');
-        header.className = 'flex items-center justify-between mb-2';
-        header.innerHTML = `<h3 class="font-semibold">${col.title}</h3>`;
+        header.className = 'uppercase text-xs tracking-wide text-gray-500 font-medium mb-3';
+        header.textContent = col.title;
         colEl.appendChild(header);
 
         const list = document.createElement('div');
-        list.className = 'space-y-2';
+        list.className = 'space-y-3 flex-grow overflow-auto';
         const filtered = tasks.filter(t => t.status === col.key);
         if (filtered.length === 0) {
-          list.innerHTML = '<div class="text-sm text-gray-400">Aucune tâche</div>';
+          list.innerHTML = '<div class="text-sm text-gray-400 select-none">Aucune tâche</div>';
         } else {
           for (const t of filtered) {
             const card = document.createElement('div');
-            card.className = 'rounded-2xl border p-4 active:scale-[.99] transition-transform cursor-pointer';
+            card.className = `rounded-xl border bg-white p-4 shadow-sm hover:shadow-lg transition cursor-pointer ${priorityBorder(t.priority)}`;
             card.innerHTML = `
               <div class="flex items-start justify-between">
                 <div>
-                  <div class="font-medium">${escapeHtml(t.title)}</div>
-                  <div class="text-xs text-gray-500">${t.team}${t.assignee ? ' · ' + escapeHtml(t.assignee) : ''}</div>
+                  <div class="font-semibold text-gray-900">${escapeHtml(t.title)}</div>
+                  <div class="text-xs text-gray-500 mt-0.5">${t.team}${t.assignee ? ' · ' + escapeHtml(t.assignee) : ''}</div>
                 </div>
-                <span class="text-[10px] px-2 py-1 rounded-full ${priorityPill(t.priority)}">${t.priority || 'Normale'}</span>
+                <span class="text-[10px] px-2 py-1 rounded-full ${priorityPill(t.priority)} font-semibold select-none">${t.priority || 'Normale'}</span>
               </div>
-              ${t.dueDate ? `<div class="text-xs mt-1">Échéance : ${formatDate(t.dueDate)}</div>` : ''}
+              ${t.dueDate ? `<div class="text-xs mt-3 text-gray-600 select-none">Échéance : ${formatDate(t.dueDate)}</div>` : ''}
             `;
             card.addEventListener('click', () => openDrawer(t));
             list.appendChild(card);
@@ -319,22 +354,6 @@
         colEl.appendChild(list);
         board.appendChild(colEl);
       }
-    }
-
-    function priorityPill(priority) {
-      switch (priority) {
-        case 'Urgent': return 'bg-red-100 text-red-700';
-        case 'Haute': return 'bg-amber-100 text-amber-700';
-        default: return 'bg-gray-100 text-gray-700';
-      }
-    }
-
-    function escapeHtml(s = '') {
-      return s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-    }
-
-    function formatDate(iso) {
-      try { return new Date(iso).toLocaleDateString('fr-FR'); } catch { return iso; }
     }
 
     function openDrawer(task = null) {
@@ -371,9 +390,7 @@
     drawerBackdrop.addEventListener('click', closeDrawer);
     drawerClose.addEventListener('click', closeDrawer);
 
-    // ----------------------
     // 4) AUTH
-    // ----------------------
     async function ensureUserDoc(user) {
       try {
         const uref = doc(db, 'users', user.uid);
@@ -407,7 +424,6 @@
 
     logoutBtn.addEventListener('click', () => signOut(auth));
 
-    // Récupère le rôle depuis la collection users/{uid}
     async function getUserRole(uid) {
       try {
         const snap = await getDoc(doc(db, 'users', uid));
@@ -415,26 +431,22 @@
       } catch { return 'Employe'; }
     }
 
-    // ----------------------
     // 5) DATA + LISTENERS
-    // ----------------------
     let unsubTasks = null;
     let currentRole = 'Employe';
 
     onAuthStateChanged(auth, async (user) => {
       if (user) {
-        await ensureUserDoc(user); // crée users/{uid} si absent (role par défaut: Employe)
+        await ensureUserDoc(user);
         currentRole = await getUserRole(user.uid);
         userRoleEl.textContent = `${user.email} · Rôle : ${currentRole}`;
         authView.classList.add('hidden');
         appView.classList.remove('hidden');
         logoutBtn.classList.remove('hidden');
-        const canCreate = ['Responsable','Reception'].includes(currentRole);
-        newTaskBtn.classList.toggle('hidden', !canCreate);
-        fabNewTask.classList.toggle('hidden', !canCreate);
+        newTaskBtn.classList.toggle('hidden', !['Responsable','Reception'].includes(currentRole));
+        fabNewTask.classList.toggle('hidden', !['Responsable','Reception'].includes(currentRole));
         attachTaskListener();
         tabs.classList.remove('hidden');
-        // Si non Responsable, on reste sur l'onglet Tâches
         if (currentRole !== 'Responsable') {
           document.querySelector('[data-tab="accounts"]').setAttribute('disabled','true');
         } else {
@@ -474,7 +486,7 @@
       });
     }
 
-    // ---- Users (admin) ----
+    // Users admin
     let unsubUsers = null;
     function startUsersListener(){
       if (unsubUsers) unsubUsers();
@@ -483,21 +495,21 @@
         snap.forEach(d=>{
           const u = { id: d.id, ...d.data() };
           const row = document.createElement('div');
-          row.className = 'flex items-center justify-between border rounded-lg p-2';
+          row.className = 'flex items-center justify-between border rounded-lg p-3 bg-gray-50 hover:bg-gray-100 transition';
           row.innerHTML = `
-            <div class="truncate">
-              <div class="font-medium max-w-[60vw] truncate">${u.email || u.id}</div>
-              <div class="text-[11px] text-gray-500">UID: ${u.id}</div>
+            <div class="truncate max-w-[60vw]">
+              <div class="font-medium text-gray-900 truncate">${u.email || u.id}</div>
+              <div class="text-[11px] text-gray-500 select-none">UID: ${u.id}</div>
             </div>
-            <div class="flex items-center gap-2">
-              <select class="px-2 py-1 rounded border">
+            <div class="flex items-center gap-3">
+              <select class="px-3 py-2 rounded border border-gray-300 font-medium focus:ring-2 focus:ring-primary-400 focus:border-primary-600 transition" aria-label="Rôle utilisateur">
                 <option ${u.role==='Employe'?'selected':''}>Employe</option>
                 <option ${u.role==='Menage'?'selected':''}>Menage</option>
                 <option ${u.role==='Technique'?'selected':''}>Technique</option>
                 <option ${u.role==='Reception'?'selected':''}>Reception</option>
                 <option ${u.role==='Responsable'?'selected':''}>Responsable</option>
               </select>
-              <button class="px-3 py-1 rounded bg-primary-600 text-white">Enregistrer</button>
+              <button class="px-4 py-2 rounded bg-primary-600 text-white font-semibold hover:bg-primary-700 transition" aria-label="Enregistrer le rôle">Enregistrer</button>
             </div>`;
           const select = row.querySelector('select');
           const saveBtn = row.querySelector('button');
@@ -515,7 +527,6 @@
     statusFilter.addEventListener('change', attachTaskListener);
     searchInput.addEventListener('input', attachTaskListener);
 
-    // CREATE / UPDATE TASK
     newTaskBtn.addEventListener('click', () => openDrawer());
     fabNewTask.addEventListener('click', () => openDrawer());
 
@@ -545,35 +556,7 @@
     });
   </script>
 
-  <!-- INFO: Firestore security rules à copier dans la console Firebase
+  <!-- Firestore security rules et notes sont inchangés -->
 
-  rules_version = '2';
-  service cloud.firestore {
-    match /databases/{database}/documents {
-      function isSignedIn() { return request.auth != null; }
-      function userRole() { return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role; }
-      function isResponsable() { return userRole() == 'Responsable'; }
-      function isReception() { return userRole() == 'Reception'; }
-      function isTeamMember(team) { return userRole() == team || isResponsable() || isReception(); }
-
-      match /users/{uid} {
-        allow read: if isSignedIn();
-        allow write: if isResponsable() || uid == request.auth.uid; // Responsable gère les rôles, chacun peut MAJ son profil minimal
-      }
-
-      match /tasks/{taskId} {
-        allow read: if isSignedIn();
-        // Création: Responsable et Réception
-        allow create: if isResponsable() || isReception();
-        // Mise à jour: Responsable, Réception, ou membre de l'équipe de la tâche
-        allow update: if isResponsable() || isReception() || (isTeamMember(request.resource.data.team));
-        // Suppression: Responsable uniquement
-        allow delete: if isResponsable();
-      }
-    }
-  }
-
-  NOTE: Créez un document users/{uid} avec { role: 'Responsable' | 'Reception' | 'Technique' | 'Menage' }
-  -->
 </body>
 </html>
