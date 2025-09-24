@@ -3,233 +3,259 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#6366f1" />
+  <meta name="theme-color" content="#2563eb" />
   <title>Camping – Dashboard</title>
 
   <!-- Tailwind (Play CDN) -->
   <script src="https://cdn.tailwindcss.com"></script>
+
   <script>
     tailwind.config = {
       theme: {
         extend: {
           colors: {
-            primary: {
-              50: '#eef2ff', 100: '#e0e7ff', 200: '#c7d2fe', 300: '#a5b4fc',
-              400: '#818cf8', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca',
-              800: '#3730a3', 900: '#312e81'
-            }
+            primary: { 50:'#eef2ff',100:'#e0e7ff',200:'#c7d2fe',300:'#a5b4fc',400:'#818cf8',500:'#6366f1',600:'#4f46e5',700:'#4338ca',800:'#3730a3',900:'#312e81' }
           },
-          borderRadius: { xl: '1rem', '2xl': '1.25rem' },
-          boxShadow: { 'soft': '0 10px 30px rgba(0,0,0,.06)' },
+          borderRadius: { xl: '18px', '2xl':'22px' },
+          boxShadow: { soft: '0 10px 30px rgba(0,0,0,.08)' },
           keyframes: {
-            pop: { from: { opacity: 0, transform: 'translateY(4px)' }, to: { opacity: 1, transform: 'none' } }
+            pop: { from:{opacity:0,transform:'translateY(4px)'}, to:{opacity:1,transform:'none'} },
+            shimmer:{ '100%':{ transform:'translateX(100%)' } }
           },
-          animation: { pop: 'pop .15s ease-out' }
+          animation: { pop: 'pop .15s ease-out', shimmer:'shimmer 1.2s infinite' }
         }
       }
     }
   </script>
 
   <style>
-    /* Mobile board: scrollable columns */
-    @media (max-width: 767px) {
-      #boardWrapper {
-        display: flex; gap: 1rem; overflow-x: auto; -webkit-overflow-scrolling: touch;
-        scroll-snap-type: x mandatory; padding-bottom: 1rem;
-      }
-      #boardWrapper > .col { min-width: 90%; scroll-snap-align: start; }
+    /* ===== Palette & base inspirées ===== */
+    :root{
+      --bg:#f8fafc; --bg-2:#ffffff; --panel:#ffffff; --muted:#f1f5f9; --line:#e5e7eb;
+      --text:#0f172a; --text-dim:#64748b; --accent:#2563eb; --accent-2:#16a34a; --danger:#dc2626;
+      --shadow:0 10px 30px rgba(0,0,0,.08); --radius:18px;
+      --safe-top:env(safe-area-inset-top); --safe-bottom:env(safe-area-inset-bottom);
     }
-    button, select, input, textarea { touch-action: manipulation; }
-    .fab {
-      position: fixed; right: 1rem; bottom: 1rem; z-index: 30; border-radius: 9999px;
-      box-shadow: 0 10px 25px rgba(0,0,0,.15); transition: background-color .3s ease;
+    html,body{height:100%}
+    body{
+      margin:0; font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial;
+      font-size:clamp(14px,2.4vw,16px); line-height:1.45; color:var(--text); background:var(--bg);
+      padding-top:var(--safe-top); padding-bottom:var(--safe-bottom);
     }
+
+    /* Topbar “flat + blur” */
+    .topbar{
+      position:sticky; top:0; z-index:20; background:rgba(255,255,255,.85); backdrop-filter:blur(10px);
+      border-bottom:1px solid var(--line);
+    }
+    .chip{ display:inline-flex; align-items:center; gap:6px; font-size:.75rem; color:#334155;
+      background:var(--muted); border:1px solid #e2e8f0; border-radius:999px; padding:6px 10px; font-weight:700; }
+
+    /* Card “panel” */
+    .panel{
+      background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+      box-shadow:var(--shadow); position:relative; overflow:hidden;
+    }
+    .panel::after{
+      content:""; position:absolute; inset:-2px; border-radius:calc(var(--radius) + 2px); padding:2px;
+      background:linear-gradient(120deg,transparent, rgba(37,99,235,.25), transparent);
+      -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite:xor; mask-composite:exclude; pointer-events:none;
+    }
+
+    /* Board mobile */
+    @media (max-width: 767px){
+      #boardWrapper{ display:flex; gap:12px; overflow-x:auto; -webkit-overflow-scrolling:touch; scroll-snap-type:x mandatory; padding-bottom:12px; }
+      #boardWrapper>.col{ min-width:90%; scroll-snap-align:start; }
+    }
+    button,select,input,textarea{ touch-action:manipulation; }
+
+    /* Tâche card “inspiration” */
+    .task-card{ position:relative; border:1px solid var(--line); border-radius:16px; background:#fff; padding:14px;
+      box-shadow:0 6px 14px rgba(15,23,42,.04); transition:transform .08s ease, box-shadow .2s ease, border-color .2s; }
+    .task-card:hover{ box-shadow:0 12px 24px rgba(0,0,0,.08); border-color:#cbd5e1 }
+    .task-card::before{ content:""; position:absolute; left:-1px; top:-1px; bottom:-1px; width:6px; border-radius:16px 0 0 16px; background:#cbd5e1; }
+    .bar-urgent::before{ background:#ef4444; } .bar-haute::before{ background:#f59e0b; } .bar-normale::before{ background:#94a3b8; }
+
+    .pill{ display:inline-flex; align-items:center; gap:6px; font-size:.75rem; border-radius:999px; padding:6px 10px; font-weight:700; border:1px solid var(--line) }
+    .pill.red{ background:#fef2f2; color:#991b1b; border-color:#fecaca }
+    .pill.amber{ background:#fffbeb; color:#92400e; border-color:#f59e0b }
+    .pill.gray{ background:#f1f5f9; color:#334155; border-color:#e2e8f0 }
+
+    /* Skeleton */
+    .skeleton{ position:relative; overflow:hidden; background:#f3f4f6; border-radius:12px }
+    .skeleton::after{ content:""; position:absolute; inset:0; transform:translateX(-100%);
+      background:linear-gradient(90deg, transparent, rgba(255,255,255,.6), transparent); animation: shimmer 1.2s infinite; }
+
+    /* Toast */
+    #toastRoot{ position:fixed; right:1rem; bottom:1rem; z-index:50; display:grid; gap:.5rem }
+    .toast{ display:flex; align-items:center; gap:.5rem; padding:.75rem 1rem; border-radius:.75rem; color:#fff; box-shadow:0 10px 25px rgba(0,0,0,.2); animation: pop .15s ease-out; }
+    .toast[data-type=success]{ background:#065f46 } .toast[data-type=error]{ background:#7f1d1d }
   </style>
 
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🏕️</text></svg>">
 </head>
+<body>
 
-<!-- PATCH: fond plus doux -->
-<body class="antialiased bg-gradient-to-b from-gray-50 to-white text-gray-800 selection:bg-primary-200">
+  <!-- Toast root -->
+  <div id="toastRoot" aria-live="polite" aria-atomic="true"></div>
 
-  <!-- App container -->
-  <div id="app" class="min-h-screen flex flex-col">
-
-    <!-- PATCH: Header compact + blur -->
-    <header class="sticky top-0 z-20 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60 border-b">
-      <div class="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <span class="text-2xl select-none">🏕️</span>
-          <h1 class="text-xl font-semibold tracking-tight text-primary-700">Dashboard Camping</h1>
-          <span id="envBadge" class="hidden ml-3 text-xs px-2 py-1 rounded-full bg-primary-100 text-primary-700 select-none">Démo</span>
-        </div>
-        <div class="flex items-center gap-3">
-          <span id="userRole" class="hidden sm:inline text-xs px-2 py-1 rounded-full bg-primary-50 text-primary-700"></span>
-          <button id="logoutBtn" class="hidden text-sm px-3 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition">Se déconnecter</button>
-        </div>
+  <!-- Header -->
+  <header class="topbar">
+    <div class="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <span class="text-2xl">🏕️</span>
+        <h1 class="text-xl font-semibold tracking-tight text-primary-700">Dashboard Camping</h1>
+        <span id="envBadge" class="hidden ml-3 text-xs px-2 py-1 rounded-full bg-primary-50 text-primary-700">Démo</span>
       </div>
-    </header>
+      <div class="flex items-center gap-3">
+        <span id="userRole" class="hidden sm:inline chip">Rôle : <strong class="font-extrabold">—</strong></span>
+        <button id="logoutBtn" class="hidden border border-[var(--line)] text-[var(--text-dim)] rounded-xl px-3 py-2 bg-white">Se déconnecter</button>
+      </div>
+    </div>
+  </header>
 
-    <!-- PATCH: Onglets pill -->
-    <nav id="tabs" class="hidden max-w-6xl mx-auto px-6 mt-4">
-      <div class="inline-flex rounded-full bg-gray-100 p-1 shadow-sm">
-        <button data-tab="tasks" class="tab-btn px-5 py-2 rounded-full text-sm font-medium bg-white shadow transition">Tâches</button>
-        <button data-tab="accounts" class="tab-btn px-5 py-2 rounded-full text-sm font-medium text-gray-600 hover:text-gray-900">Comptes</button>
+  <!-- Auth view -->
+  <main id="authView" class="min-h-[calc(100vh-64px)] grid place-items-center px-4">
+    <section class="panel p-6 sm:p-8 w-full max-w-md">
+      <header class="flex items-center gap-3 mb-3">
+        <img class="h-12 sm:h-16 object-contain" src="assets/logo-la-plage.png" alt="Camping La Plage" />
+        <div>
+          <h2 class="text-2xl font-semibold tracking-tight">Connexion</h2>
+          <p class="text-[var(--text-dim)] text-sm">Entrez vos identifiants pour accéder au dashboard.</p>
+        </div>
+      </header>
+
+      <form id="loginForm" class="grid gap-4">
+        <div>
+          <label class="block text-sm text-[var(--text-dim)] mb-1">Email</label>
+          <input id="email" type="email" required class="w-full rounded-xl border border-[var(--line)] px-4 py-3 focus:ring-2 focus:ring-primary-300 focus:border-primary-500" placeholder="ex: rec01@demo.local" />
+        </div>
+        <div>
+          <label class="block text-sm text-[var(--text-dim)] mb-1">Mot de passe</label>
+          <input id="password" type="password" required class="w-full rounded-xl border border-[var(--line)] px-4 py-3 focus:ring-2 focus:ring-primary-300 focus:border-primary-500" placeholder="••••••••" />
+        </div>
+        <div class="flex items-center justify-between">
+          <span id="authError" class="text-sm text-red-700"></span>
+          <button class="px-4 py-3 rounded-xl bg-primary-600 text-white font-semibold hover:bg-primary-700 shadow-md">Se connecter</button>
+        </div>
+      </form>
+
+      <div class="my-5 h-px bg-[var(--line)]"></div>
+
+      <button id="googleBtn" class="w-full flex items-center justify-center gap-3 border border-[var(--line)] rounded-xl py-3 hover:bg-gray-50">
+        <img alt="Google" src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-6 h-6" />
+        <span class="font-medium text-gray-700">Continuer avec Google</span>
+      </button>
+    </section>
+  </main>
+
+  <!-- App view -->
+  <main id="appView" class="hidden max-w-6xl mx-auto px-6 py-6 flex flex-col gap-6">
+
+    <!-- Tabs -->
+    <nav id="tabs" class="hidden">
+      <div class="inline-flex rounded-full bg-[var(--muted)] p-1 border border-[var(--line)] shadow-sm">
+        <button data-tab="tasks" class="tab-btn px-5 py-2 rounded-full text-sm font-semibold bg-white shadow">Tâches</button>
+        <button data-tab="accounts" class="tab-btn px-5 py-2 rounded-full text-sm font-semibold text-gray-600 hover:text-gray-900">Comptes</button>
       </div>
     </nav>
 
-    <!-- Auth view -->
-    <main id="authView" class="flex-grow flex justify-center items-center px-4">
-      <div class="bg-white rounded-2xl shadow-soft p-8 max-w-md w-full border border-gray-100">
-        <div class="text-center mb-8">
-          <span class="text-5xl select-none">🏕️</span>
-          <h2 class="mt-4 text-2xl font-semibold text-gray-800 tracking-tight">Connexion</h2>
+    <!-- Filtres -->
+    <section class="panel p-4 md:p-6">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-3 md:gap-4">
+        <select id="teamFilter" class="px-4 py-3 rounded-xl border border-[var(--line)] bg-white font-medium focus:ring-2 focus:ring-primary-300 focus:border-primary-500">
+          <option value="ALL">Toutes les équipes</option>
+          <option value="Reception">Réception</option>
+          <option value="Technique">Technique</option>
+          <option value="Menage">Ménage</option>
+        </select>
+        <select id="statusFilter" class="px-4 py-3 rounded-xl border border-[var(--line)] bg-white font-medium focus:ring-2 focus:ring-primary-300 focus:border-primary-500">
+          <option value="ACTIVE">Statuts actifs</option>
+          <option value="A_faire">À faire</option>
+          <option value="En_cours">En cours</option>
+          <option value="Bloque">Bloqué</option>
+          <option value="Termine">Terminé</option>
+        </select>
+        <input id="searchInput" type="search" placeholder="Rechercher une tâche…" class="px-4 py-3 rounded-xl border border-[var(--line)] focus:ring-2 focus:ring-primary-300 focus:border-primary-500 font-medium" />
+        <div class="flex md:justify-end">
+          <button id="newTaskBtn" class="w-full md:w-auto px-6 py-3 rounded-xl bg-primary-600 text-white font-semibold hover:bg-primary-700 shadow-md">+ Nouvelle tâche</button>
         </div>
-        <form id="loginForm" class="space-y-6">
-          <div>
-            <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-            <input id="email" type="email" required class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary-300 focus:border-primary-500 transition" placeholder="exemple@exemple.com" />
-          </div>
-          <div>
-            <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Mot de passe</label>
-            <input id="password" type="password" required class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary-300 focus:border-primary-500 transition" placeholder="••••••••" />
-          </div>
-          <button class="w-full bg-primary-600 text-white py-3 rounded-xl font-semibold hover:bg-primary-700 shadow-md transition">Se connecter</button>
-        </form>
-
-        <div class="my-6 flex items-center gap-3">
-          <div class="flex-1 h-px bg-gray-200"></div>
-          <span class="text-xs text-gray-500">ou</span>
-          <div class="flex-1 h-px bg-gray-200"></div>
-        </div>
-
-        <button id="googleBtn" class="w-full flex items-center justify-center gap-3 border border-gray-200 rounded-xl py-3 hover:bg-gray-50 transition">
-          <img alt="Google" src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-6 h-6" />
-          <span class="font-medium text-gray-700">Continuer avec Google</span>
-        </button>
-
-        <p class="text-xs text-gray-500 mt-6 text-center">Pas de compte ? Utilisez Google ou demandez à votre Responsable.</p>
-      </div>
-    </main>
-
-    <!-- App view -->
-    <main id="appView" class="hidden flex-grow max-w-6xl mx-auto px-6 py-8 flex flex-col">
-      <!-- PATCH: Carte filtres premium -->
-      <details class="mb-6 bg-white rounded-2xl shadow-lg p-4 md:p-6 open:shadow-xl transition" open>
-        <summary class="md:hidden text-base font-semibold cursor-pointer select-none flex items-center gap-2">
-          <span>▾</span> Filtres & recherche
-        </summary>
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-3 md:gap-4 mt-4 md:mt-0">
-          <select id="teamFilter" class="px-4 py-3 rounded-xl border border-gray-200 bg-white font-medium focus:ring-2 focus:ring-primary-300 focus:border-primary-500 transition" aria-label="Filtrer par équipe">
-            <option value="ALL">Toutes les équipes</option>
-            <option value="Reception">Réception</option>
-            <option value="Technique">Technique</option>
-            <option value="Menage">Ménage</option>
-          </select>
-          <select id="statusFilter" class="px-4 py-3 rounded-xl border border-gray-200 bg-white font-medium focus:ring-2 focus:ring-primary-300 focus:border-primary-500 transition" aria-label="Filtrer par statut">
-            <option value="ACTIVE">Statuts actifs</option>
-            <option value="A_faire">À faire</option>
-            <option value="En_cours">En cours</option>
-            <option value="Bloque">Bloqué</option>
-            <option value="Termine">Terminé</option>
-          </select>
-          <input id="searchInput" type="search" placeholder="Rechercher une tâche…" class="px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary-300 focus:border-primary-500 transition font-medium" aria-label="Recherche tâches" />
-          <div class="flex md:justify-end">
-            <button id="newTaskBtn" class="w-full md:w-auto px-6 py-3 rounded-xl bg-primary-600 text-white font-semibold hover:bg-primary-700 shadow-md transition">+ Nouvelle tâche</button>
-          </div>
-        </div>
-      </details>
-
-      <!-- Board -->
-      <div id="boardWrapper" class="md:grid md:grid-cols-4 md:gap-6 flex-1 overflow-auto">
-        <div id="board" class="contents md:contents"></div>
-      </div>
-
-      <!-- Drawer: create/edit task -->
-      <div id="drawer" class="hidden fixed inset-0 z-30 flex">
-        <div class="absolute inset-0 bg-black/40 transition-opacity" id="drawerBackdrop"></div>
-
-        <!-- PATCH: drawer arrondi + blur -->
-        <div class="absolute right-0 top-0 h-full w-full sm:w-[480px] bg-white/95 backdrop-blur shadow-2xl rounded-l-2xl flex flex-col">
-          <div class="p-6 border-b flex items-center justify-between sticky top-0 bg-white/80 backdrop-blur z-10">
-            <h3 id="drawerTitle" class="text-lg font-semibold text-gray-800">Nouvelle tâche</h3>
-            <button id="drawerClose" class="rounded-full w-8 h-8 grid place-items-center hover:bg-gray-100" aria-label="Fermer la fenêtre">✕</button>
-          </div>
-
-          <form id="taskForm" class="flex-1 overflow-y-auto p-6 space-y-6">
-            <input type="hidden" id="taskId" />
-            <div>
-              <label for="title" class="block text-sm font-medium mb-2 text-gray-700">Titre</label>
-              <input id="title" required class="w-full rounded-xl border border-gray-200 px-4 py-3 focus:ring-2 focus:ring-primary-300 focus:border-primary-500 transition font-medium" />
-            </div>
-            <div>
-              <label for="description" class="block text-sm font-medium mb-2 text-gray-700">Description</label>
-              <textarea id="description" rows="4" class="w-full rounded-xl border border-gray-200 px-4 py-3 focus:ring-2 focus:ring-primary-300 focus:border-primary-500 transition font-medium resize-y"></textarea>
-            </div>
-            <div class="grid grid-cols-2 gap-6">
-              <div>
-                <label for="team" class="block text-sm font-medium mb-2 text-gray-700">Équipe</label>
-                <select id="team" class="w-full rounded-xl border border-gray-200 px-4 py-3 focus:ring-2 focus:ring-primary-300 focus:border-primary-500 transition font-medium">
-                  <option>Reception</option>
-                  <option>Technique</option>
-                  <option>Menage</option>
-                </select>
-              </div>
-              <div>
-                <label for="priority" class="block text-sm font-medium mb-2 text-gray-700">Priorité</label>
-                <select id="priority" class="w-full rounded-xl border border-gray-200 px-4 py-3 focus:ring-2 focus:ring-primary-300 focus:border-primary-500 transition font-medium">
-                  <option>Normale</option>
-                  <option>Haute</option>
-                  <option>Urgent</option>
-                </select>
-              </div>
-            </div>
-            <div class="grid grid-cols-2 gap-6">
-              <div>
-                <label for="dueDate" class="block text-sm font-medium mb-2 text-gray-700">Échéance</label>
-                <input id="dueDate" type="date" class="w-full rounded-xl border border-gray-200 px-4 py-3 focus:ring-2 focus:ring-primary-300 focus:border-primary-500 transition font-medium" />
-              </div>
-              <div>
-                <label for="status" class="block text-sm font-medium mb-2 text-gray-700">Statut</label>
-                <select id="status" class="w-full rounded-xl border border-gray-200 px-4 py-3 focus:ring-2 focus:ring-primary-300 focus:border-primary-500 transition font-medium">
-                  <option>A_faire</option>
-                  <option>En_cours</option>
-                  <option>Bloque</option>
-                  <option>Termine</option>
-                </select>
-              </div>
-            </div>
-            <div>
-              <label for="assignee" class="block text-sm font-medium mb-2 text-gray-700">Attribuer à (optionnel)</label>
-              <input id="assignee" placeholder="Nom du salarié" class="w-full rounded-xl border border-gray-200 px-4 py-3 focus:ring-2 focus:ring-primary-300 focus:border-primary-500 transition font-medium" />
-            </div>
-            <div class="flex items-center gap-4">
-              <button class="px-6 py-3 rounded-xl bg-primary-600 text-white font-semibold hover:bg-primary-700 shadow-md transition">Enregistrer</button>
-              <button type="button" id="deleteBtn" class="hidden px-6 py-3 rounded-xl bg-red-600 text-white font-semibold hover:bg-red-700 shadow-md transition">Supprimer</button>
-            </div>
-          </form>
-        </div>
-      </div>
-
-      <!-- FAB mobile -->
-      <button id="fabNewTask" class="hidden md:hidden fab bg-primary-600 text-white w-12 h-12 rounded-full text-2xl leading-none grid place-items-center shadow-lg hover:bg-primary-700" aria-label="Nouvelle tâche">+</button>
-    </main>
-
-    <!-- Accounts view -->
-    <section id="accountsView" class="hidden max-w-6xl mx-auto px-6 py-8 flex flex-col gap-6">
-      <div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-        <h3 class="font-semibold text-lg mb-2">Gestion des comptes</h3>
-        <p class="text-xs text-gray-500 mb-6">Les salariés doivent d’abord se connecter (Google ou email/mot de passe). Ensuite, vous pouvez leur attribuer un rôle ci-dessous.</p>
-        <div id="usersList" class="space-y-3 text-sm"></div>
       </div>
     </section>
-  </div>
 
-  <!-- Firebase SDKs et JS -->
+    <!-- Board -->
+    <section id="boardWrapper" class="grid md:grid-cols-4 md:gap-6">
+      <div id="board" class="contents"></div>
+    </section>
+
+    <!-- Accounts -->
+    <section id="accountsView" class="hidden panel p-6">
+      <h3 class="font-semibold text-lg mb-2">Gestion des comptes</h3>
+      <p class="text-xs text-[var(--text-dim)] mb-4">Les salariés se connectent (Google ou email/mot de passe). Ensuite, attribuez-leur un rôle.</p>
+      <div id="usersList" class="space-y-3 text-sm"></div>
+    </section>
+
+    <!-- Drawer -->
+    <div id="drawer" class="hidden fixed inset-0 z-30">
+      <div id="drawerBackdrop" class="absolute inset-0 bg-black/40"></div>
+      <div class="absolute right-0 top-0 h-full w-full sm:w-[480px] bg-white/95 backdrop-blur shadow-2xl rounded-l-2xl flex flex-col">
+        <div class="p-6 border-b flex items-center justify-between sticky top-0 bg-white/80 backdrop-blur z-10">
+          <h3 id="drawerTitle" class="text-lg font-semibold">Nouvelle tâche</h3>
+          <button id="drawerClose" class="rounded-full w-8 h-8 grid place-items-center hover:bg-gray-100">✕</button>
+        </div>
+        <form id="taskForm" class="flex-1 overflow-y-auto p-6 grid gap-6">
+          <input type="hidden" id="taskId" />
+          <div>
+            <label class="block text-sm text-[var(--text-dim)] mb-1">Titre</label>
+            <input id="title" required class="w-full rounded-xl border border-[var(--line)] px-4 py-3 focus:ring-2 focus:ring-primary-300 focus:border-primary-500" />
+          </div>
+          <div>
+            <label class="block text-sm text-[var(--text-dim)] mb-1">Description</label>
+            <textarea id="description" rows="4" class="w-full rounded-xl border border-[var(--line)] px-4 py-3 focus:ring-2 focus:ring-primary-300 focus:border-primary-500"></textarea>
+          </div>
+          <div class="grid grid-cols-2 gap-6">
+            <div>
+              <label class="block text-sm text-[var(--text-dim)] mb-1">Équipe</label>
+              <select id="team" class="w-full rounded-xl border border-[var(--line)] px-4 py-3 focus:ring-2 focus:ring-primary-300 focus:border-primary-500">
+                <option>Reception</option><option>Technique</option><option>Menage</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm text-[var(--text-dim)] mb-1">Priorité</label>
+              <select id="priority" class="w-full rounded-xl border border-[var(--line)] px-4 py-3 focus:ring-2 focus:ring-primary-300 focus:border-primary-500">
+                <option>Normale</option><option>Haute</option><option>Urgent</option>
+              </select>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-6">
+            <div>
+              <label class="block text-sm text-[var(--text-dim)] mb-1">Échéance</label>
+              <input id="dueDate" type="date" class="w-full rounded-xl border border-[var(--line)] px-4 py-3 focus:ring-2 focus:ring-primary-300 focus:border-primary-500" />
+            </div>
+            <div>
+              <label class="block text-sm text-[var(--text-dim)] mb-1">Statut</label>
+              <select id="status" class="w-full rounded-xl border border-[var(--line)] px-4 py-3 focus:ring-2 focus:ring-primary-300 focus:border-primary-500">
+                <option>A_faire</option><option>En_cours</option><option>Bloque</option><option>Termine</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm text-[var(--text-dim)] mb-1">Attribuer à (optionnel)</label>
+            <input id="assignee" placeholder="Nom du salarié" class="w-full rounded-xl border border-[var(--line)] px-4 py-3 focus:ring-2 focus:ring-primary-300 focus:border-primary-500" />
+          </div>
+          <div class="flex items-center gap-4">
+            <button class="px-6 py-3 rounded-xl bg-primary-600 text-white font-semibold hover:bg-primary-700 shadow-md">Enregistrer</button>
+            <button type="button" id="deleteBtn" class="hidden px-6 py-3 rounded-xl bg-red-600 text-white font-semibold hover:bg-red-700 shadow-md">Supprimer</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <!-- Firebase + App JS -->
   <script type="module">
-    // ----------------------
-    // 1) CONFIGURATION
-    // ----------------------
+    // --- Config Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyB0mHA_vMsBiCdzWDACfN4Lhef644NOHDY",
       authDomain: "dashboardcampinglaplagev3.firebaseapp.com",
@@ -238,10 +264,7 @@
       messagingSenderId: "1083060495264",
       appId: "1:1083060495264:web:03e34965179a671ca6fac5"
     };
-
-    if (firebaseConfig.apiKey === 'CHANGE_ME') {
-      document.getElementById('envBadge').classList.remove('hidden');
-    }
+    if (firebaseConfig.apiKey === 'CHANGE_ME') document.getElementById('envBadge').classList.remove('hidden');
 
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
     import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
@@ -249,41 +272,24 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
-    const db = getFirestore(app);
+    const db   = getFirestore(app);
 
+    // --- Helpers DOM
     const $ = (id) => document.getElementById(id);
-    const authView = $('authView');
-    const appView = $('appView');
-    const userRoleEl = $('userRole');
-    const logoutBtn = $('logoutBtn');
-    const newTaskBtn = $('newTaskBtn');
-    const fabNewTask = $('fabNewTask');
-    const board = $('board');
-    const teamFilter = $('teamFilter');
-    const statusFilter = $('statusFilter');
-    const searchInput = $('searchInput');
-    const drawer = $('drawer');
-    const drawerBackdrop = $('drawerBackdrop');
-    const drawerClose = $('drawerClose');
-    const drawerTitle = $('drawerTitle');
-    const taskForm = $('taskForm');
-    const deleteBtn = $('deleteBtn');
-    const tabs = document.getElementById('tabs');
-    const accountsView = document.getElementById('accountsView');
-    const usersList = document.getElementById('usersList');
-    const googleBtn = $('googleBtn');
+    const authView = $('authView'), appView=$('appView'), userRoleEl=$('userRole');
+    const logoutBtn=$('logoutBtn'), newTaskBtn=$('newTaskBtn'), board=$('board');
+    const teamFilter=$('teamFilter'), statusFilter=$('statusFilter'), searchInput=$('searchInput');
+    const drawer=$('drawer'), drawerBackdrop=$('drawerBackdrop'), drawerClose=$('drawerClose'), drawerTitle=$('drawerTitle');
+    const taskForm=$('taskForm'), deleteBtn=$('deleteBtn');
+    const tabs=$('tabs'), accountsView=$('accountsView'), usersList=$('usersList'), googleBtn=$('googleBtn');
+    const authError=$('authError');
 
-    // PATCH: navigation onglets sécurisée (ne rien faire si non connecté)
+    // Tabs
     function showTab(key){
-      if (tabs.classList.contains('hidden')) return; // important
+      if (tabs.classList.contains('hidden')) return;
       const taskActive = key === 'tasks';
-      if (taskActive) { 
-        appView.classList.remove('hidden'); 
-        accountsView.classList.add('hidden'); 
-      } else { 
-        appView.classList.add('hidden'); 
-        accountsView.classList.remove('hidden'); 
-      }
+      appView.querySelector('#accountsView').classList.toggle('hidden', taskActive);
+      appView.querySelector('#boardWrapper').classList.toggle('hidden', !taskActive);
       document.querySelectorAll('.tab-btn').forEach(btn=>{
         const active = btn.dataset.tab === key;
         btn.classList.toggle('bg-white', active);
@@ -291,80 +297,71 @@
         btn.classList.toggle('text-gray-600', !active);
       });
     }
-    document.addEventListener('click', (e) => {
-      if (e.target.classList.contains('tab-btn')) showTab(e.target.dataset.tab);
-    });
+    document.addEventListener('click',(e)=>{ const b=e.target.closest('.tab-btn'); if(b) showTab(b.dataset.tab); });
 
+    // Status cols
     const statusColumns = [
-      { key: 'A_faire', title: 'À faire' },
+      { key: 'A_faire',  title: 'À faire' },
       { key: 'En_cours', title: 'En cours' },
-      { key: 'Bloque', title: 'Bloqué' },
-      { key: 'Termine', title: 'Terminé' },
+      { key: 'Bloque',   title: 'Bloqué' },
+      { key: 'Termine',  title: 'Terminé' },
     ];
+    const prBar = (p) => p==='Urgent' ? 'bar-urgent' : (p==='Haute'?'bar-haute':'bar-normale');
+    const prPill = (p) => p==='Urgent' ? 'pill red' : (p==='Haute'?'pill amber':'pill gray');
 
-    // PATCH: couleurs plus UI
-    function priorityPill(p) {
-      switch (p) {
-        case 'Urgent': return 'bg-red-50 text-red-700 ring-1 ring-red-200';
-        case 'Haute':  return 'bg-amber-50 text-amber-700 ring-1 ring-amber-200';
-        default:       return 'bg-gray-50 text-gray-700 ring-1 ring-gray-200';
+    const esc = (s='') => s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    const fdate = (iso)=>{ try{ return new Date(iso).toLocaleDateString('fr-FR'); }catch{ return iso; } };
+
+    // Skeleton + Toast
+    const toastRoot = document.getElementById('toastRoot');
+    function showToast(type,msg,ms=2600){ const el=document.createElement('div'); el.className='toast'; el.dataset.type=type; el.innerHTML=(type==='success'?'✅ ':'⚠️ ')+esc(msg); toastRoot.appendChild(el); setTimeout(()=>el.remove(),ms); el.onclick=()=>el.remove(); }
+    let firstLoad = true;
+    function renderSkeleton(){
+      board.innerHTML='';
+      for(let i=0;i<4;i++){
+        const col=document.createElement('div'); col.className='col panel p-4 min-h-[220px]';
+        col.innerHTML=`
+          <div class="flex items-center justify-between mb-3">
+            <div class="uppercase text-[11px] tracking-wider text-gray-500 font-semibold">Chargement…</div>
+            <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-700">—</span>
+          </div>
+          <div class="grid gap-3">
+            <div class="skeleton h-20"></div>
+            <div class="skeleton h-16"></div>
+            <div class="skeleton h-24"></div>
+          </div>`;
+        board.appendChild(col);
       }
     }
-    function priorityBorder(p) {
-      switch (p) {
-        case 'Urgent': return 'border-l-4 border-red-400';
-        case 'Haute':  return 'border-l-4 border-amber-400';
-        default:       return 'border-l-4 border-gray-200';
-      }
-    }
 
-    function escapeHtml(s = '') {
-      return s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-    }
-    function formatDate(iso) {
-      try { return new Date(iso).toLocaleDateString('fr-FR'); } catch { return iso; }
-    }
-
-    // PATCH: header de colonne avec compteur
-    function columnHeader(title, count) {
-      return `
-        <div class="flex items-center justify-between mb-3">
-          <div class="uppercase text-[11px] tracking-wider text-gray-500 font-semibold">${title}</div>
-          <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-700">${count}</span>
-        </div>`;
-    }
-
-    function renderBoard(tasks) {
-      board.innerHTML = '';
-      for (const col of statusColumns) {
-        const colEl = document.createElement('div');
-        colEl.className = 'col bg-white rounded-2xl shadow-lg p-4 min-h-[220px] flex flex-col border border-gray-100';
-        const list = document.createElement('div');
-        list.className = 'space-y-3 flex-grow overflow-auto';
-
-        const filtered = tasks.filter(t => t.status === col.key);
-        colEl.innerHTML = columnHeader(col.title, filtered.length);
-
-        if (filtered.length === 0) {
-          list.innerHTML = `
-            <div class="text-center text-sm text-gray-400 py-6 select-none border border-dashed rounded-xl">
-              Aucune tâche
-            </div>`;
-        } else {
-          for (const t of filtered) {
-            const card = document.createElement('div');
-            card.className = `task-card rounded-2xl border border-gray-200 bg-white p-4 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition ${priorityBorder(t.priority)} animate-pop`;
+    function renderBoard(tasks){
+      board.innerHTML='';
+      for(const col of statusColumns){
+        const colEl=document.createElement('div');
+        colEl.className='col panel p-4 min-h-[220px]';
+        const list=document.createElement('div'); list.className='grid gap-3';
+        const filtered = tasks.filter(t=>t.status===col.key);
+        colEl.innerHTML = `
+          <div class="flex items-center justify-between mb-3">
+            <div class="uppercase text-[11px] tracking-wider text-gray-500 font-semibold">${col.title}</div>
+            <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-700">${filtered.length}</span>
+          </div>`;
+        if(!filtered.length){
+          list.innerHTML = `<div class="text-center text-sm text-gray-400 py-6 border border-dashed rounded-xl">Aucune tâche</div>`;
+        }else{
+          for(const t of filtered){
+            const card=document.createElement('div');
+            card.className=`task-card ${prBar(t.priority)} animate-pop cursor-pointer`;
             card.innerHTML = `
               <div class="flex items-start justify-between gap-3">
                 <div class="min-w-0">
-                  <div class="font-semibold text-gray-900 truncate">${escapeHtml(t.title)}</div>
-                  <div class="text-xs text-gray-500 mt-1 truncate">${t.team}${t.assignee ? ' · ' + escapeHtml(t.assignee) : ''}</div>
+                  <div class="font-semibold text-gray-900 truncate">${esc(t.title)}</div>
+                  <div class="text-xs text-[var(--text-dim)] mt-1 truncate">${t.team}${t.assignee ? ' · '+esc(t.assignee):''}</div>
                 </div>
-                <span class="text-[10px] px-2 py-1 rounded-full ${priorityPill(t.priority)} font-semibold whitespace-nowrap">${t.priority || 'Normale'}</span>
+                <span class="${prPill(t.priority)} whitespace-nowrap">${t.priority||'Normale'}</span>
               </div>
-              ${t.dueDate ? `<div class="text-xs mt-3 text-gray-600 flex items-center gap-1">🗓️ <span>${formatDate(t.dueDate)}</span></div>` : ''}
-            `;
-            card.addEventListener('click', () => openDrawer(t));
+              ${t.dueDate ? `<div class="text-xs mt-3 text-gray-600">🗓️ ${fdate(t.dueDate)}</div>` : ''}`;
+            card.onclick=()=>openDrawer(t);
             list.appendChild(card);
           }
         }
@@ -373,126 +370,68 @@
       }
     }
 
-    function openDrawer(task = null) {
+    function openDrawer(task=null){
       drawer.classList.remove('hidden');
-      if (task) {
-        drawerTitle.textContent = 'Modifier la tâche';
-        $('taskId').value = task.id;
-        $('title').value = task.title || '';
-        $('description').value = task.description || '';
-        $('team').value = task.team || 'Reception';
-        $('priority').value = task.priority || 'Normale';
-        $('dueDate').value = task.dueDate || '';
-        $('status').value = task.status || 'A_faire';
-        $('assignee').value = task.assignee || '';
+      if(task){
+        drawerTitle.textContent='Modifier la tâche';
+        $('taskId').value=task.id;
+        $('title').value=task.title||''; $('description').value=task.description||'';
+        $('team').value=task.team||'Reception'; $('priority').value=task.priority||'Normale';
+        $('dueDate').value=task.dueDate||''; $('status').value=task.status||'A_faire'; $('assignee').value=task.assignee||'';
         deleteBtn.classList.remove('hidden');
-        deleteBtn.onclick = async () => {
-          if (!confirm('Supprimer cette tâche ?')) return;
-          await deleteDoc(doc(db, 'tasks', task.id));
-          closeDrawer();
+        deleteBtn.onclick=async()=>{
+          if(!confirm('Supprimer cette tâche ?')) return;
+          await deleteDoc(doc(db,'tasks',task.id));
+          showToast('success','Tâche supprimée'); closeDrawer();
         };
-      } else {
-        drawerTitle.textContent = 'Nouvelle tâche';
-        taskForm.reset();
-        $('taskId').value = '';
-        $('status').value = 'A_faire';
-        deleteBtn.classList.add('hidden');
+      }else{
+        drawerTitle.textContent='Nouvelle tâche'; taskForm.reset(); $('taskId').value=''; $('status').value='A_faire'; deleteBtn.classList.add('hidden');
       }
     }
+    const closeDrawer=()=>drawer.classList.add('hidden');
+    drawerBackdrop.onclick=closeDrawer; drawerClose.onclick=closeDrawer;
 
-    function closeDrawer() { drawer.classList.add('hidden'); }
-    drawerBackdrop.addEventListener('click', closeDrawer);
-    drawerClose.addEventListener('click', closeDrawer);
+    // Auth
+    async function ensureUserDoc(user){
+      try{
+        const uref=doc(db,'users',user.uid); const snap=await getDoc(uref);
+        if(!snap.exists()) await setDoc(uref,{ role:'Employe', email:user.email||null, createdAt:serverTimestamp() });
+      }catch(e){ console.warn(e); }
+    }
+    const provider=new GoogleAuthProvider();
 
-    // 4) AUTH
-    async function ensureUserDoc(user) {
-      try {
-        const uref = doc(db, 'users', user.uid);
-        const snap = await getDoc(uref);
-        if (!snap.exists()) {
-          await setDoc(uref, { role: 'Employe', email: user.email || null, createdAt: serverTimestamp() });
-        }
-      } catch (e) { console.warn('ensureUserDoc', e); }
+    $('loginForm').addEventListener('submit', async (e)=>{
+      e.preventDefault(); authError.textContent='';
+      try{ await signInWithEmailAndPassword(auth, $('email').value.trim(), $('password').value.trim()); }
+      catch(err){ authError.textContent='Connexion impossible'; showToast('error', err?.message || err); }
+    });
+    googleBtn.addEventListener('click', async ()=>{
+      try{ await signInWithPopup(auth, provider); }catch(e){ showToast('error','Connexion Google impossible : '+(e?.message||e)); }
+    });
+    logoutBtn.onclick=()=>signOut(auth);
+
+    async function getUserRole(uid){
+      try{ const s=await getDoc(doc(db,'users',uid)); return s.exists() ? (s.data().role||'Employe') : 'Employe'; }
+      catch{ return 'Employe'; }
     }
 
-    const loginForm = $('loginForm');
-    loginForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const email = $('email').value.trim();
-      const password = $('password').value.trim();
-      try {
-        await signInWithEmailAndPassword(auth, email, password);
-      } catch (err) {
-        alert('Connexion impossible: ' + (err?.message || err));
-      }
-    });
-
-    const provider = new GoogleAuthProvider();
-    googleBtn.addEventListener('click', async () => {
-      try { await signInWithPopup(auth, provider); }
-      catch (e) { alert('Connexion Google impossible: ' + (e?.message || e)); }
-    });
-
-    logoutBtn.addEventListener('click', () => signOut(auth));
-
-    async function getUserRole(uid) {
-      try {
-        const snap = await getDoc(doc(db, 'users', uid));
-        return snap.exists() ? (snap.data().role || 'Employe') : 'Employe';
-      } catch { return 'Employe'; }
-    }
-
-    // 5) DATA + LISTENERS
-    let unsubTasks = null;
-    let currentRole = 'Employe';
-
-    onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        await ensureUserDoc(user);
-        currentRole = await getUserRole(user.uid);
-        userRoleEl.textContent = `${user.email} · Rôle : ${currentRole}`;
-        authView.classList.add('hidden');
-        appView.classList.remove('hidden');
-        logoutBtn.classList.remove('hidden');
-        newTaskBtn.classList.toggle('hidden', !['Responsable','Reception'].includes(currentRole));
-        fabNewTask.classList.toggle('hidden', !['Responsable','Reception'].includes(currentRole));
-        attachTaskListener();
-        tabs.classList.remove('hidden');
-        accountsView.classList.toggle('hidden', currentRole !== 'Responsable');
-        if (currentRole !== 'Responsable') {
-          document.querySelector('[data-tab="accounts"]').setAttribute('disabled','true');
-        } else {
-          document.querySelector('[data-tab="accounts"]').removeAttribute('disabled');
-          startUsersListener();
-        }
-        showTab('tasks');
-      } else {
-        if (unsubTasks) unsubTasks();
-        authView.classList.remove('hidden');
-        appView.classList.add('hidden');
-        accountsView.classList.add('hidden');
-        userRoleEl.textContent = '';
-        logoutBtn.classList.add('hidden');
-        tabs.classList.add('hidden');
-        // PATCH: on NE rappelle PAS showTab('tasks') ici, pour ne pas réafficher la vue
-      }
-    });
-
-    function attachTaskListener() {
-      if (unsubTasks) unsubTasks();
-      const tasksRef = collection(db, 'tasks');
-      unsubTasks = onSnapshot(query(tasksRef, orderBy('createdAt','desc')), (snap) => {
-        const q = (searchInput.value || '').toLowerCase();
-        const tf = teamFilter.value;
-        const sf = statusFilter.value;
-        const items = [];
-        snap.forEach(d => {
-          const t = { id: d.id, ...d.data() };
-          if (tf !== 'ALL' && t.team !== tf) return;
-          if (sf === 'ACTIVE' && ['Termine'].includes(t.status)) return;
-          if (['A_faire','En_cours','Bloque','Termine'].includes(sf) && t.status !== sf) return;
-          const blob = `${t.title} ${t.description} ${t.assignee}`.toLowerCase();
-          if (q && !blob.includes(q)) return;
+    // Data listeners
+    let unsubTasks=null, currentRole='Employe';
+    function attachTaskListener(){
+      if(unsubTasks) unsubTasks();
+      if(firstLoad) renderSkeleton();
+      const tasksRef=collection(db,'tasks');
+      unsubTasks=onSnapshot(query(tasksRef, orderBy('createdAt','desc')), (snap)=>{
+        firstLoad=false;
+        const q=(searchInput.value||'').toLowerCase(), tf=teamFilter.value, sf=statusFilter.value;
+        const items=[];
+        snap.forEach(d=>{
+          const t={ id:d.id, ...d.data() };
+          if(tf!=='ALL' && t.team!==tf) return;
+          if(sf==='ACTIVE' && ['Termine'].includes(t.status)) return;
+          if(['A_faire','En_cours','Bloque','Termine'].includes(sf) && t.status!==sf) return;
+          const blob=`${t.title} ${t.description} ${t.assignee}`.toLowerCase();
+          if(q && !blob.includes(q)) return;
           items.push(t);
         });
         renderBoard(items);
@@ -500,71 +439,80 @@
     }
 
     // Users admin
-    let unsubUsers = null;
+    let unsubUsers=null;
     function startUsersListener(){
-      if (unsubUsers) unsubUsers();
-      unsubUsers = onSnapshot(collection(db, 'users'), (snap)=>{
-        usersList.innerHTML = '';
+      if(unsubUsers) unsubUsers();
+      unsubUsers=onSnapshot(collection(db,'users'), (snap)=>{
+        usersList.innerHTML='';
         snap.forEach(d=>{
-          const u = { id: d.id, ...d.data() };
-          const row = document.createElement('div');
-          row.className = 'flex items-center justify-between border rounded-xl p-3 bg-gray-50 hover:bg-gray-100 transition';
-          row.innerHTML = `
+          const u={ id:d.id, ...d.data() };
+          const row=document.createElement('div');
+          row.className='flex items-center justify-between border rounded-xl p-3 bg-[var(--muted)]';
+          row.innerHTML=`
             <div class="truncate max-w-[60vw]">
               <div class="font-medium text-gray-900 truncate">${u.email || u.id}</div>
-              <div class="text-[11px] text-gray-500 select-none">UID: ${u.id}</div>
+              <div class="text-[11px] text-[var(--text-dim)] select-none">UID: ${u.id}</div>
             </div>
             <div class="flex items-center gap-3">
-              <select class="px-3 py-2 rounded border border-gray-200 font-medium focus:ring-2 focus:ring-primary-300 focus:border-primary-500 transition" aria-label="Rôle utilisateur">
+              <select class="px-3 py-2 rounded border border-[var(--line)] font-medium focus:ring-2 focus:ring-primary-300 focus:border-primary-500">
                 <option ${u.role==='Employe'?'selected':''}>Employe</option>
                 <option ${u.role==='Menage'?'selected':''}>Menage</option>
                 <option ${u.role==='Technique'?'selected':''}>Technique</option>
                 <option ${u.role==='Reception'?'selected':''}>Reception</option>
                 <option ${u.role==='Responsable'?'selected':''}>Responsable</option>
               </select>
-              <button class="px-4 py-2 rounded-xl bg-primary-600 text-white font-semibold hover:bg-primary-700 transition" aria-label="Enregistrer le rôle">Enregistrer</button>
+              <button class="px-4 py-2 rounded-xl bg-primary-600 text-white font-semibold hover:bg-primary-700">Enregistrer</button>
             </div>`;
-          const select = row.querySelector('select');
-          const saveBtn = row.querySelector('button');
-          saveBtn.addEventListener('click', async ()=>{
-            try {
-              await updateDoc(doc(db,'users',u.id), { role: select.value, updatedAt: serverTimestamp() });
-            } catch (e) { alert('Maj rôle impossible: '+(e?.message||e)); }
-          });
+          const select=row.querySelector('select'), save=row.querySelector('button');
+          save.onclick=async()=>{
+            try{ await updateDoc(doc(db,'users',u.id), { role: select.value, updatedAt: serverTimestamp() }); showToast('success','Rôle enregistré'); }
+            catch(e){ showToast('error','Maj rôle impossible : '+(e?.message||e)); }
+          };
           usersList.appendChild(row);
         });
       });
     }
 
-    teamFilter.addEventListener('change', attachTaskListener);
-    statusFilter.addEventListener('change', attachTaskListener);
+    // Filters
+    [teamFilter, statusFilter].forEach(el=>el.addEventListener('change', attachTaskListener));
     searchInput.addEventListener('input', attachTaskListener);
 
-    newTaskBtn.addEventListener('click', () => openDrawer());
-    fabNewTask.addEventListener('click', () => openDrawer());
+    newTaskBtn.onclick=()=>openDrawer();
+    $('drawer').addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeDrawer(); });
 
-    taskForm.addEventListener('submit', async (e) => {
+    taskForm.addEventListener('submit', async (e)=>{
       e.preventDefault();
-      const payload = {
-        title: $('title').value.trim(),
-        description: $('description').value.trim(),
-        team: $('team').value,
-        priority: $('priority').value,
-        dueDate: $('dueDate').value || null,
-        status: $('status').value,
-        assignee: $('assignee').value.trim() || null,
-        updatedAt: serverTimestamp(),
+      const payload={
+        title:$('title').value.trim(), description:$('description').value.trim(),
+        team:$('team').value, priority:$('priority').value, dueDate:$('dueDate').value||null,
+        status:$('status').value, assignee:$('assignee').value.trim()||null, updatedAt: serverTimestamp(),
       };
-      try {
-        const id = $('taskId').value;
-        if (id) {
-          await updateDoc(doc(db, 'tasks', id), payload);
-        } else {
-          await addDoc(collection(db, 'tasks'), { ...payload, createdAt: serverTimestamp(), createdBy: auth.currentUser.uid });
-        }
-        closeDrawer();
-      } catch (err) {
-        alert('Erreur enregistrement: ' + (err?.message || err));
+      try{
+        const id=$('taskId').value;
+        if(id){ await updateDoc(doc(db,'tasks',id), payload); }
+        else  { await addDoc(collection(db,'tasks'), { ...payload, createdAt: serverTimestamp(), createdBy: auth.currentUser.uid }); }
+        showToast('success','Tâche enregistrée'); closeDrawer();
+      }catch(err){ showToast('error','Erreur enregistrement : '+(err?.message||err)); }
+    });
+
+    // Auth state
+    onAuthStateChanged(auth, async (user)=>{
+      if(user){
+        await ensureUserDoc(user);
+        currentRole = await getUserRole(user.uid);
+        userRoleEl.classList.remove('hidden');
+        userRoleEl.querySelector('strong').textContent=currentRole;
+        authView.classList.add('hidden'); appView.classList.remove('hidden'); logoutBtn.classList.remove('hidden');
+        $('tabs').classList.remove('hidden');
+        newTaskBtn.classList.toggle('hidden', !['Responsable','Reception'].includes(currentRole));
+        attachTaskListener();
+        accountsView.classList.toggle('hidden', currentRole!=='Responsable');
+        if(currentRole==='Responsable') startUsersListener();
+        showTab('tasks');
+      }else{
+        if(unsubTasks) unsubTasks();
+        authView.classList.remove('hidden'); appView.classList.add('hidden'); accountsView.classList.add('hidden');
+        userRoleEl.classList.add('hidden'); logoutBtn.classList.add('hidden'); tabs.classList.add('hidden');
       }
     });
   </script>
