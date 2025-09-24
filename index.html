@@ -435,35 +435,37 @@
     let unsubTasks = null;
     let currentRole = 'Employe';
 
-    onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        await ensureUserDoc(user);
-        currentRole = await getUserRole(user.uid);
-        userRoleEl.textContent = `${user.email} · Rôle : ${currentRole}`;
-        authView.classList.add('hidden');
-        appView.classList.remove('hidden');
-        logoutBtn.classList.remove('hidden');
-        newTaskBtn.classList.toggle('hidden', !['Responsable','Reception'].includes(currentRole));
-        fabNewTask.classList.toggle('hidden', !['Responsable','Reception'].includes(currentRole));
-        attachTaskListener();
-        tabs.classList.remove('hidden');
-        if (currentRole !== 'Responsable') {
-          document.querySelector('[data-tab="accounts"]').setAttribute('disabled','true');
-        } else {
-          document.querySelector('[data-tab="accounts"]').removeAttribute('disabled');
-          startUsersListener();
-        }
-        showTab('tasks');
-      } else {
-        if (unsubTasks) unsubTasks();
-        authView.classList.remove('hidden');
-        appView.classList.add('hidden');
-        userRoleEl.textContent = '';
-        logoutBtn.classList.add('hidden');
-        tabs.classList.add('hidden');
-        showTab('tasks');
-      }
-    });
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    await ensureUserDoc(user);
+    currentRole = await getUserRole(user.uid);
+    userRoleEl.textContent = `${user.email} · Rôle : ${currentRole}`;
+    authView.classList.add('hidden');
+    appView.classList.remove('hidden');
+    logoutBtn.classList.remove('hidden');
+    newTaskBtn.classList.toggle('hidden', !['Responsable','Reception'].includes(currentRole));
+    fabNewTask.classList.toggle('hidden', !['Responsable','Reception'].includes(currentRole));
+    attachTaskListener();
+    tabs.classList.remove('hidden');
+    accountsView.classList.toggle('hidden', currentRole !== 'Responsable');
+    if (currentRole !== 'Responsable') {
+      document.querySelector('[data-tab="accounts"]').setAttribute('disabled','true');
+    } else {
+      document.querySelector('[data-tab="accounts"]').removeAttribute('disabled');
+      startUsersListener();
+    }
+    showTab('tasks');
+  } else {
+    if (unsubTasks) unsubTasks();
+    authView.classList.remove('hidden');
+    appView.classList.add('hidden');
+    accountsView.classList.add('hidden');
+    userRoleEl.textContent = '';
+    logoutBtn.classList.add('hidden');
+    tabs.classList.add('hidden');
+  }
+});
+
 
     function attachTaskListener() {
       if (unsubTasks) unsubTasks();
