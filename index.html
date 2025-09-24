@@ -49,6 +49,14 @@
       </div>
     </header>
 
+    <!-- Onglets (cachés tant que non connecté) -->
+    <nav id="tabs" class="hidden max-w-6xl mx-auto px-4 mt-3">
+      <ul class="flex gap-2 text-sm">
+        <li><button data-tab="tasks" class="tab-btn px-3 py-2 rounded-lg bg-primary-600 text-white">Tâches</button></li>
+        <li><button data-tab="accounts" class="tab-btn px-3 py-2 rounded-lg bg-white border">Comptes</button></li>
+      </ul>
+    </nav>
+
     <!-- Auth view -->
     <main id="authView" class="max-w-md mx-auto mt-16 px-4">
       <div class="bg-white rounded-2xl shadow p-6">
@@ -177,6 +185,15 @@
       <!-- FAB mobile -->
       <button id="fabNewTask" class="hidden fab bg-primary-600 text-white px-5 py-4 text-base">+ Tâche</button>
     </main>
+
+    <!-- Accounts view -->
+    <section id="accountsView" class="hidden max-w-6xl mx-auto px-4 py-6">
+      <div class="bg-white rounded-2xl shadow p-4">
+        <h3 class="font-semibold mb-1">Gestion des comptes</h3>
+        <p class="text-xs text-gray-500 mb-4">Les salariés doivent d’abord se connecter (Google ou email/mot de passe). Ensuite, vous pouvez leur attribuer un rôle ci-dessous.</p>
+        <div id="usersList" class="space-y-2 text-sm"></div>
+      </div>
+    </section>
   </div>
 
   <!-- Firebase SDKs -->
@@ -236,7 +253,28 @@
     const taskForm = $('taskForm');
     const deleteBtn = $('deleteBtn');
 
+    // Onglets
+    const tabs = document.getElementById('tabs');
+    const accountsView = document.getElementById('accountsView');
+    const usersList = document.getElementById('usersList');
+
     const googleBtn = $('googleBtn');
+
+    function showTab(key){
+      const taskActive = key === 'tasks';
+      if (taskActive){ appView.classList.remove('hidden'); accountsView.classList.add('hidden'); }
+      else { appView.classList.add('hidden'); accountsView.classList.remove('hidden'); }
+      document.querySelectorAll('.tab-btn').forEach(btn=>{
+        const active = btn.dataset.tab === key;
+        btn.classList.toggle('bg-primary-600', active);
+        btn.classList.toggle('text-white', active);
+        btn.classList.toggle('bg-white', !active);
+        btn.classList.toggle('border', !active);
+      });
+    }
+    document.addEventListener('click', (e)=>{
+      if (e.target.classList.contains('tab-btn')) showTab(e.target.dataset.tab);
+    });
 
     const statusColumns = [
       { key: 'A_faire', title: 'À faire' },
@@ -395,12 +433,23 @@
         newTaskBtn.classList.toggle('hidden', !canCreate);
         fabNewTask.classList.toggle('hidden', !canCreate);
         attachTaskListener();
+        tabs.classList.remove('hidden');
+        // Si non Responsable, on reste sur l'onglet Tâches
+        if (currentRole !== 'Responsable') {
+          document.querySelector('[data-tab="accounts"]').setAttribute('disabled','true');
+        } else {
+          document.querySelector('[data-tab="accounts"]').removeAttribute('disabled');
+          startUsersListener();
+        }
+        showTab('tasks');
       } else {
         if (unsubTasks) unsubTasks();
         authView.classList.remove('hidden');
         appView.classList.add('hidden');
         userRoleEl.textContent = '';
         logoutBtn.classList.add('hidden');
+        tabs.classList.add('hidden');
+        showTab('tasks');
       }
     });
 
@@ -422,6 +471,43 @@
           items.push(t);
         });
         renderBoard(items);
+      });
+    }
+
+    // ---- Users (admin) ----
+    let unsubUsers = null;
+    function startUsersListener(){
+      if (unsubUsers) unsubUsers();
+      unsubUsers = onSnapshot(collection(db, 'users'), (snap)=>{
+        usersList.innerHTML = '';
+        snap.forEach(d=>{
+          const u = { id: d.id, ...d.data() };
+          const row = document.createElement('div');
+          row.className = 'flex items-center justify-between border rounded-lg p-2';
+          row.innerHTML = `
+            <div class="truncate">
+              <div class="font-medium max-w-[60vw] truncate">${u.email || u.id}</div>
+              <div class="text-[11px] text-gray-500">UID: ${u.id}</div>
+            </div>
+            <div class="flex items-center gap-2">
+              <select class="px-2 py-1 rounded border">
+                <option ${u.role==='Employe'?'selected':''}>Employe</option>
+                <option ${u.role==='Menage'?'selected':''}>Menage</option>
+                <option ${u.role==='Technique'?'selected':''}>Technique</option>
+                <option ${u.role==='Reception'?'selected':''}>Reception</option>
+                <option ${u.role==='Responsable'?'selected':''}>Responsable</option>
+              </select>
+              <button class="px-3 py-1 rounded bg-primary-600 text-white">Enregistrer</button>
+            </div>`;
+          const select = row.querySelector('select');
+          const saveBtn = row.querySelector('button');
+          saveBtn.addEventListener('click', async ()=>{
+            try {
+              await updateDoc(doc(db,'users',u.id), { role: select.value, updatedAt: serverTimestamp() });
+            } catch (e) { alert('Maj rôle impossible: '+(e?.message||e)); }
+          });
+          usersList.appendChild(row);
+        });
       });
     }
 
