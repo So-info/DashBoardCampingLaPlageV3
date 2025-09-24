@@ -104,7 +104,13 @@
   <header class="topbar">
     <div class="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between">
       <div class="flex items-center gap-3">
-        <span class="text-2xl">🏕️</span>
+        <img
+  src="./assets/logo-la-plage.png"
+  alt="Camping La Plage"
+  class="h-8 sm:h-9 w-auto"
+  onerror="this.remove();document.getElementById('logoFallback').classList.remove('hidden')" />
+<span id="logoFallback" class="text-2xl hidden">🏕️</span>
+
         <h1 class="text-xl font-semibold tracking-tight text-primary-700">Dashboard Camping</h1>
         <span id="envBadge" class="hidden ml-3 text-xs px-2 py-1 rounded-full bg-primary-50 text-primary-700">Démo</span>
       </div>
@@ -518,3 +524,4 @@
   </script>
 </body>
 </html>
+
