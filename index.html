@@ -67,6 +67,44 @@
     #toastRoot{ position:fixed; right:14px; bottom:14px; display:grid; gap:8px; z-index:60 }
     .toast{display:flex;align-items:center;gap:.5rem;padding:.7rem 1rem;border-radius:12px;color:#fff;box-shadow:0 12px 28px rgba(0,0,0,.2);background:#065f46;font-weight:700}
     .toast.err{background:#7f1d1d}
+
+    /* --- Mobile polish --- */
+@media (max-width: 767px){
+  .topbar .max-w-6xl{ padding-left:14px; padding-right:14px }
+  .topbar h1{ display:none }                /* cache le gros titre sur mobile */
+  .chip{ padding:6px 9px }                  /* puces un poil plus compactes */
+  .panel{ border-radius:16px }
+
+  /* Filtres collants sous la topbar */
+  .filters-sticky{ position:sticky; top:52px; z-index:15; }
+
+  /* Accordéon des colonnes */
+  .mobile-col{ padding:10px 12px; border-radius:16px }
+  .mobile-col .col-head{ margin:-6px -6px 6px; padding:6px; border-radius:12px; }
+  .mobile-col .col-head button{ width:100%; display:flex; align-items:center; justify-content:space-between }
+  .mobile-col .col-body{ display:none }
+  .mobile-col.open .col-body{ display:grid }
+  .mobile-col .col-title{ font-size:.7rem; letter-spacing:.12em }
+  .mobile-col .col-count{ transform:translateY(-1px) }
+
+  /* cartes plus denses mais cliquables */
+  .task-card{ padding:10px 12px; border-radius:14px }
+  .task-card::before{ border-radius:14px 0 0 14px }
+
+  /* bouton + flottant (visible seulement mobile) */
+  .fab{
+    position:fixed; right:16px; bottom:calc(16px + var(--safe-bottom));
+    width:56px; height:56px; border-radius:999px;
+    display:grid; place-items:center;
+    font-size:24px; line-height:1; font-weight:800;
+    color:#fff; background:#4f46e5; box-shadow:0 18px 40px rgba(79,70,229,.35);
+    z-index:45;
+  }
+}
+
+/* petit luxe : vignette de “squelette” plus fine */
+.empty{ height:64px }
+
   </style>
 
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🏕️</text></svg>">
@@ -81,7 +119,10 @@
       <div class="flex items-center gap-3">
         <img src="logo-la-plage.png" alt="Camping La Plage" class="h-8 sm:h-9 w-auto" onerror="this.remove();document.getElementById('logoFallback').classList.remove('hidden')" />
         <span id="logoFallback" class="text-2xl hidden">🏕️</span>
-        <h1 class="text-xl font-semibold tracking-tight text-primary-700">Dashboard – Interventions</h1>
+<h1 class="hidden sm:block text-xl font-semibold tracking-tight text-primary-700">
+  Dashboard – Interventions
+</h1>
+
         <span id="envBadge" class="hidden ml-3 text-xs px-2 py-1 rounded-full bg-primary-50 text-primary-700">Démo</span>
       </div>
       <div class="flex items-center gap-3">
@@ -138,6 +179,7 @@
       </button>
     </section>
   </main>
+<button id="fabNew" class="md:hidden fab" aria-label="Nouvelle intervention">+</button>
 
   <!-- App view -->
   <main id="appView" class="hidden max-w-6xl mx-auto px-6 py-6 flex flex-col gap-6">
@@ -151,7 +193,7 @@
     </nav>
 
     <!-- Filtres -->
-    <section class="panel p-4 md:p-6">
+<section class="panel p-4 md:p-6 filters-sticky" id="filtersPanel">
       <div class="grid grid-cols-1 md:grid-cols-4 gap-3 md:gap-4 items-center">
         <select id="teamFilter" class="px-4 py-3 rounded-xl border border-[var(--line)] bg-white font-medium focus:ring-2 focus:ring-primary-300 focus:border-primary-500">
           <option value="ALL">Tous les services</option>
@@ -329,42 +371,77 @@
       }
     }
 
-    function renderBoard(tasks){
-      board.innerHTML='';
-      for(const col of statusColumns){
-        const colEl = document.createElement('div');
-        colEl.className = 'board-col';
-        const filtered = tasks.filter(t=>t.status===col.key);
-        colEl.innerHTML = `
-          <div class="col-head">
-            <div class="col-title">${col.title}</div>
-            <span class="col-count">${filtered.length}</span>
+function renderBoard(tasks){
+  board.innerHTML='';
+  const isMobile = window.matchMedia('(max-width: 767px)').matches;
+  let first = true;
+
+  for(const col of statusColumns){
+    const colEl = document.createElement('section');
+    colEl.className = 'board-col ' + (isMobile ? 'mobile-col' : '');
+
+    const filtered = tasks.filter(t=>t.status===col.key);
+
+    // tête (bouton en mobile)
+    const head = document.createElement(isMobile ? 'div' : 'div');
+    head.className = 'col-head';
+
+    if(isMobile){
+      head.innerHTML = `
+        <button type="button" class="px-2">
+          <span class="col-title">${col.title}</span>
+          <span class="col-count">${filtered.length}</span>
+        </button>
+      `;
+    }else{
+      head.innerHTML = `
+        <div class="col-title">${col.title}</div>
+        <span class="col-count">${filtered.length}</span>
+      `;
+    }
+
+    // corps
+    const body = document.createElement('div');
+    body.className = (isMobile ? 'col-body ' : '') + 'grid gap-3';
+
+    if(!filtered.length){
+      body.innerHTML = `<div class="empty">Aucune intervention</div>`;
+    }else{
+      for(const t of filtered){
+        const card = document.createElement('div');
+        card.className = `task-card ${prBar(t.priority)} cursor-pointer`;
+        card.innerHTML = `
+          <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0">
+              <div class="task-title truncate">${esc(t.title)}</div>
+              <div class="task-meta truncate">${t.team}${t.assignee ? ' · '+esc(t.assignee) : ''}</div>
+            </div>
+            <span class="${prPill(t.priority)} whitespace-nowrap">${t.priority || 'Normale'}</span>
           </div>
-          <div class="grid gap-3"></div>
+          ${t.dueDate ? `<div class="text-xs mt-3 text-gray-600">🗓️ ${fdate(t.dueDate)}</div>` : ''}
         `;
-        const list = colEl.querySelector('div.grid');
-        if(!filtered.length){ list.innerHTML = `<div class="empty">Aucune intervention</div>`; }
-        else {
-          for(const t of filtered){
-            const card = document.createElement('div');
-            card.className = `task-card ${prBar(t.priority)} cursor-pointer`;
-            card.innerHTML = `
-              <div class="flex items-start justify-between gap-3">
-                <div class="min-w-0">
-                  <div class="task-title truncate">${esc(t.title)}</div>
-                  <div class="task-meta truncate">${t.team}${t.assignee ? ' · '+esc(t.assignee) : ''}</div>
-                </div>
-                <span class="${prPill(t.priority)} whitespace-nowrap">${t.priority || 'Normale'}</span>
-              </div>
-              ${t.dueDate ? `<div class="text-xs mt-3 text-gray-600">🗓️ ${fdate(t.dueDate)}</div>` : ''}
-            `;
-            card.addEventListener('click',()=>openDrawer(t));
-            list.appendChild(card);
-          }
-        }
-        board.appendChild(colEl);
+        card.addEventListener('click',()=>openDrawer(t));
+        body.appendChild(card);
       }
     }
+
+    colEl.appendChild(head);
+    colEl.appendChild(body);
+
+    // comportement accordéon en mobile
+    if(isMobile){
+      if(first){ colEl.classList.add('open'); first=false; }
+      head.querySelector('button').addEventListener('click', ()=>{
+        // ferme les autres
+        document.querySelectorAll('.mobile-col.open').forEach(el=>{ if(el!==colEl) el.classList.remove('open'); });
+        colEl.classList.toggle('open');
+      });
+    }
+
+    board.appendChild(colEl);
+  }
+}
+
 
     function openDrawer(task=null){
       drawer.classList.remove('hidden');
@@ -445,6 +522,12 @@
           items.push(t);
         });
         renderBoard(items);
+        try{
+  const counts = {A_faire:0, En_cours:0, Bloque:0, Termine:0};
+  items.forEach(t=>counts[t.status] = (counts[t.status]||0)+1);
+  document.title = `Interventions – ${counts.A_faire + counts.En_cours} actives`;
+}catch{}
+
       });
       // Astuce UI: afficher l'étiquette de la page courante
       if(deriveServiceScope()!== 'ALL'){
@@ -532,6 +615,9 @@
     searchInput.addEventListener('input', attachTaskListener);
 
     newTaskBtn.onclick=()=>openDrawer();
+    const fabNew = document.getElementById('fabNew');
+if(fabNew){ fabNew.addEventListener('click', () => openDrawer()); }
+
     $('drawer').addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeDrawer(); });
 
     taskForm.addEventListener('submit', async (e)=>{
@@ -590,3 +676,4 @@
   </script>
 </body>
 </html>
+
