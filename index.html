@@ -114,7 +114,8 @@
   <div id="toastRoot" aria-live="polite" aria-atomic="true"></div>
 
   <!-- Header -->
-  <header class="topbar">
+<!-- APRÈS -->
+<header id="headerRoot" class="topbar hidden">
     <div class="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between">
       <div class="flex items-center gap-3">
         <img src="logo-la-plage.png" alt="Camping La Plage" class="h-8 sm:h-9 w-auto" onerror="this.remove();document.getElementById('logoFallback').classList.remove('hidden')" />
@@ -146,7 +147,9 @@
   </header>
 
   <!-- Auth view -->
-  <main id="authView" class="min-h-[calc(100vh-64px)] grid place-items-center px-4">
+<!-- APRÈS -->
+<main id="authView" class="min-h-screen grid place-items-center px-4">
+
     <section class="panel p-6 sm:p-8 w-full max-w-md">
       <header class="flex items-center gap-3 mb-3">
         <img class="h-12 sm:h-16 object-contain" src="logo-la-plage.png" alt="Camping La Plage" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'🏕️',className:'text-5xl select-none'}))" />
@@ -646,33 +649,50 @@ if(fabNew){ fabNew.addEventListener('click', () => openDrawer()); }
     });
 
     // Auth state
-    onAuthStateChanged(auth, async (user)=>{
-      if(user){
-        await ensureUserDoc(user);
-        currentRole = await getUserRole(user.uid);
-        userRoleEl.classList.remove('hidden');
-        userRoleEl.querySelector('strong').textContent=currentRole;
-        authView.classList.add('hidden'); appView.classList.remove('hidden'); logoutBtn.classList.remove('hidden');
-        $('tabs').classList.remove('hidden');
-        accountsView.classList.toggle('hidden', currentRole!=='Responsable');
-        if(currentRole==='Responsable') startUsersListener();
+onAuthStateChanged(auth, async (user)=>{
+  const header = document.getElementById('headerRoot') || document.querySelector('header.topbar'); // NEW
 
-        // Déterminer la page/service initial
-        if(currentRole==='Technique'){ location.hash = '#technique'; }
-        else if(currentRole==='Menage'){ location.hash = '#menage'; }
-        else { // Reception / Responsable / Employe
-          const svc = deriveServiceFromHash();
-          currentService = svc; // respecte l'URL partagée
-        }
-        applyServiceUI();
-        attachTaskListener();
-        showTab('tasks');
-      }else{
-        if(unsubTasks) unsubTasks(); if(unsubUsers) unsubUsers();
-        authView.classList.remove('hidden'); appView.classList.add('hidden'); accountsView.classList.add('hidden');
-        userRoleEl.classList.add('hidden'); logoutBtn.classList.add('hidden'); tabs.classList.add('hidden');
-      }
-    });
+  if(user){
+    await ensureUserDoc(user);
+    currentRole = await getUserRole(user.uid);
+    userRoleEl.classList.remove('hidden');
+    userRoleEl.querySelector('strong').textContent=currentRole;
+
+    // afficher l'app + header
+    authView.classList.add('hidden');
+    appView.classList.remove('hidden');
+    logoutBtn.classList.remove('hidden');
+    $('tabs').classList.remove('hidden');
+    header?.classList.remove('hidden'); // NEW
+
+    accountsView.classList.toggle('hidden', currentRole!=='Responsable');
+    if(currentRole==='Responsable') startUsersListener();
+
+    // Déterminer la page/service initial
+    if(currentRole==='Technique'){ location.hash = '#technique'; }
+    else if(currentRole==='Menage'){ location.hash = '#menage'; }
+    else { // Reception / Responsable / Employe
+      const svc = deriveServiceFromHash();
+      currentService = svc; // respecte l'URL partagée
+    }
+    applyServiceUI();
+    attachTaskListener();
+    showTab('tasks');
+  }else{
+    if(unsubTasks) unsubTasks();
+    if(unsubUsers) unsubUsers();
+
+    // montrer uniquement la page de connexion + cacher header
+    authView.classList.remove('hidden');
+    appView.classList.add('hidden');
+    accountsView.classList.add('hidden');
+    userRoleEl.classList.add('hidden');
+    logoutBtn.classList.add('hidden');
+    tabs.classList.add('hidden');
+    header?.classList.add('hidden'); // NEW
+  }
+});
+
   </script>
 </body>
 </html>
