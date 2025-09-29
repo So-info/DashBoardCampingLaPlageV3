@@ -316,7 +316,6 @@
     const drawer=$('drawer'), drawerBackdrop=$('drawerBackdrop'), drawerClose=$('drawerClose'), drawerTitle=$('drawerTitle');
     const taskForm=$('taskForm'), deleteBtn=$('deleteBtn');
     const tabs=$('tabs'), accountsView=$('accountsView'), usersList=$('usersList'), googleBtn=$('googleBtn');
-    const accountsTabBtn = document.querySelector('.tab-btn[data-tab="accounts"]');
     const authError=$('authError');
     const serviceBar=document.getElementById('serviceBar');
     const serviceHint=document.getElementById('serviceHint');
@@ -338,18 +337,7 @@
         btn.classList.toggle('text-gray-600', !active);
       });
     }
-document.addEventListener('click',(e)=>{
-  const b = e.target.closest('.tab-btn');
-  if(!b) return;
-
-  const key = b.dataset.tab;
-  if(key === 'accounts' && currentRole !== 'Responsable'){
-    showToast('error','Accès réservé au Responsable'); // optionnel
-    return; // on ne change pas d’onglet
-  }
-  showTab(key);
-});
-
+    document.addEventListener('click',(e)=>{ const b=e.target.closest('.tab-btn'); if(b) showTab(b.dataset.tab); });
 
     // Status cols
     const statusColumns = [
@@ -662,19 +650,20 @@ if(fabNew){ fabNew.addEventListener('click', () => openDrawer()); }
 
     // Auth state
 onAuthStateChanged(auth, async (user)=>{
+  const header = document.getElementById('headerRoot') || document.querySelector('header.topbar'); // NEW
+
   if(user){
     await ensureUserDoc(user);
     currentRole = await getUserRole(user.uid);
     userRoleEl.classList.remove('hidden');
     userRoleEl.querySelector('strong').textContent=currentRole;
 
+    // afficher l'app + header
     authView.classList.add('hidden');
     appView.classList.remove('hidden');
     logoutBtn.classList.remove('hidden');
     $('tabs').classList.remove('hidden');
-
-    // NEW: n’afficher le bouton "Comptes" que pour Responsable
-    accountsTabBtn?.classList.toggle('hidden', currentRole !== 'Responsable');
+    header?.classList.remove('hidden'); // NEW
 
     accountsView.classList.toggle('hidden', currentRole!=='Responsable');
     if(currentRole==='Responsable') startUsersListener();
@@ -684,27 +673,23 @@ onAuthStateChanged(auth, async (user)=>{
     else if(currentRole==='Menage'){ location.hash = '#menage'; }
     else { // Reception / Responsable / Employe
       const svc = deriveServiceFromHash();
-      currentService = svc;
+      currentService = svc; // respecte l'URL partagée
     }
-
     applyServiceUI();
     attachTaskListener();
-
-    // NEW: force l’onglet Interventions si l’utilisateur n’est pas Responsable
-    showTab(currentRole === 'Responsable' ? 'tasks' : 'tasks');
+    showTab('tasks');
   }else{
     if(unsubTasks) unsubTasks();
     if(unsubUsers) unsubUsers();
 
+    // montrer uniquement la page de connexion + cacher header
     authView.classList.remove('hidden');
     appView.classList.add('hidden');
     accountsView.classList.add('hidden');
     userRoleEl.classList.add('hidden');
     logoutBtn.classList.add('hidden');
     tabs.classList.add('hidden');
-
-    // NEW: par sécurité, on recache le bouton "Comptes"
-    accountsTabBtn?.classList.add('hidden');
+    header?.classList.add('hidden'); // NEW
   }
 });
 
